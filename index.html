@@ -205,6 +205,46 @@
             .cal-day .day-pnl { font-size: 0.65rem; }
         }
         
+        /* Open Positions */
+        .pos-card {
+            background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+            padding: 20px; position: relative; overflow: hidden;
+        }
+        .pos-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+        }
+        .pos-card.pos-profit::before { background: linear-gradient(90deg, var(--green), #34d399); }
+        .pos-card.pos-loss::before { background: linear-gradient(90deg, var(--red), #f87171); }
+        .pos-header {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;
+        }
+        .pos-pair { font-size: 1.2rem; font-weight: 700; }
+        .pos-badges { display: flex; gap: 6px; }
+        .pos-badge {
+            padding: 3px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 600;
+            background: rgba(100,116,139,0.15); color: var(--text-dim);
+        }
+        .pos-badge.long { background: var(--green-bg); color: var(--green); }
+        .pos-badge.short { background: var(--red-bg); color: var(--red); }
+        .pos-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 12px;
+        }
+        .pos-item .pos-label { font-size: 0.7rem; color: var(--text-dim); margin-bottom: 2px; }
+        .pos-item .pos-val { font-size: 1rem; font-weight: 600; }
+        .pos-pnl-big { font-size: 1.8rem; font-weight: 800; }
+        .pos-roi { font-size: 1rem; font-weight: 600; margin-top: 2px; }
+        .pos-tpsl {
+            margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border);
+            display: flex; gap: 20px; font-size: 0.85rem;
+        }
+        .live-dot {
+            width: 8px; height: 8px; border-radius: 50%; background: var(--green);
+            display: inline-block; margin-left: 6px;
+            animation: blink 1.5s infinite;
+        }
+        @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+        
         .particle {
             position: fixed; width: 3px; height: 3px;
             background: rgba(59,130,246,0.3); border-radius: 50%;
@@ -289,6 +329,12 @@
             </div>
         </div>
         
+        <!-- Open Positions -->
+        <div id="openPositionsSection">
+            <div class="section-title">🔴 פוזיציות פתוחות (LIVE)</div>
+            <div id="openPositions" style="display:flex;flex-direction:column;gap:12px;margin-bottom:30px;"></div>
+        </div>
+        
         <!-- Rules -->
         <div class="rules-banner">
             <span class="rule-title">⚠️ כללי ברזל</span>
@@ -365,6 +411,26 @@
             24: 221.69
         }
     };
+    
+    // Open positions
+    const OPEN_POSITIONS = [
+        {
+            pair: "CYBER/USDT",
+            direction: "LONG",
+            leverage: "20X",
+            mode: "Cross",
+            entry: 0.5235,
+            markPrice: 0.5412,
+            size: 5895.6,
+            margin: 156.19,
+            unrealizedPnl: 102.72,
+            roi: 66.55,
+            tp: 0.6533,
+            sl: 0.5296,
+            liqPrice: 0.3929,
+            realizedPnl: 36.57
+        }
+    ];
     
     // Individual trades
     const TRADES = [];
@@ -534,10 +600,58 @@
         el.style.color = val >= 0 ? 'var(--green)' : 'var(--red)';
     }
     
+    function renderOpenPositions() {
+        const container = document.getElementById('openPositions');
+        if (OPEN_POSITIONS.length === 0) {
+            document.getElementById('openPositionsSection').style.display = 'none';
+            return;
+        }
+        container.innerHTML = OPEN_POSITIONS.map(p => {
+            const isProfit = p.unrealizedPnl >= 0;
+            return `
+            <div class="pos-card ${isProfit ? 'pos-profit' : 'pos-loss'}">
+                <div class="pos-header">
+                    <div>
+                        <span class="pos-pair">${p.pair}</span>
+                        <span class="live-dot"></span>
+                    </div>
+                    <div class="pos-badges">
+                        <span class="pos-badge ${p.direction.toLowerCase()}">${p.direction}</span>
+                        <span class="pos-badge">${p.mode}</span>
+                        <span class="pos-badge">${p.leverage}</span>
+                    </div>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:16px;">
+                    <div>
+                        <div class="pos-label" style="font-size:0.75rem;color:var(--text-dim)">Unrealized PnL</div>
+                        <div class="pos-pnl-big ${isProfit ? 'green' : 'red'}">${isProfit ? '+' : ''}$${p.unrealizedPnl.toFixed(2)}</div>
+                    </div>
+                    <div style="text-align:left">
+                        <div class="pos-label" style="font-size:0.75rem;color:var(--text-dim)">ROI</div>
+                        <div class="pos-roi ${isProfit ? 'green' : 'red'}">${isProfit ? '+' : ''}${p.roi}%</div>
+                    </div>
+                </div>
+                <div class="pos-grid">
+                    <div class="pos-item"><div class="pos-label">Entry Price</div><div class="pos-val">$${p.entry}</div></div>
+                    <div class="pos-item"><div class="pos-label">Mark Price</div><div class="pos-val">$${p.markPrice}</div></div>
+                    <div class="pos-item"><div class="pos-label">Size</div><div class="pos-val">${p.size.toLocaleString()} CYBER</div></div>
+                    <div class="pos-item"><div class="pos-label">Margin</div><div class="pos-val">$${p.margin.toFixed(2)}</div></div>
+                    <div class="pos-item"><div class="pos-label">Liq. Price</div><div class="pos-val red">$${p.liqPrice}</div></div>
+                    <div class="pos-item"><div class="pos-label">Realized PnL</div><div class="pos-val green">+$${p.realizedPnl.toFixed(2)}</div></div>
+                </div>
+                <div class="pos-tpsl">
+                    <span>🎯 TP: <strong class="green">$${p.tp}</strong></span>
+                    <span>🛑 SL: <strong class="red">$${p.sl}</strong></span>
+                </div>
+            </div>`;
+        }).join('');
+    }
+    
     // Init
     renderMonthSelector();
     renderCalendar();
     renderStats();
+    renderOpenPositions();
     </script>
 </body>
 </html>
