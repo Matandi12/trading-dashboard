@@ -412,6 +412,80 @@
             100% { transform: translateY(-100px); opacity: 0; }
         }
         
+        /* Equity Curve */
+        .equity-curve-wrapper {
+            background: var(--card); border: 1px solid var(--border); border-radius: 18px;
+            padding: 24px 28px; margin-bottom: 28px; overflow: hidden;
+        }
+        .equity-curve-wrapper .section-title { margin-bottom: 12px; }
+        .equity-svg { width: 100%; height: 200px; }
+        .equity-svg .line { fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+        .equity-svg .area { opacity: 0.12; }
+        .equity-svg .grid-line { stroke: var(--border); stroke-width: 0.5; stroke-dasharray: 4 4; }
+        .equity-svg .dot { r: 3.5; stroke-width: 2; cursor: pointer; transition: r 0.2s; }
+        .equity-svg .dot:hover { r: 6; }
+        .equity-svg .axis-label { fill: var(--text-dim); font-size: 10px; font-family: Inter, sans-serif; }
+        .equity-svg .zero-line { stroke: var(--text-dim); stroke-width: 0.5; stroke-dasharray: 6 3; opacity: 0.4; }
+
+        /* PnL Bar Chart */
+        .bar-chart-wrapper {
+            background: var(--card); border: 1px solid var(--border); border-radius: 18px;
+            padding: 24px 28px; margin-bottom: 28px;
+        }
+        .bar-svg { width: 100%; height: 180px; }
+        .bar-svg .bar { rx: 3; ry: 3; cursor: pointer; transition: opacity 0.2s; }
+        .bar-svg .bar:hover { opacity: 0.75; }
+        .bar-svg .bar-label { fill: var(--text-dim); font-size: 9px; font-family: Inter, sans-serif; text-anchor: middle; }
+        .bar-svg .bar-val { font-size: 8px; font-family: Inter, sans-serif; font-weight: 700; text-anchor: middle; }
+
+        /* Discipline Score */
+        .discipline-wrapper {
+            background: var(--card); border: 1px solid var(--border); border-radius: 18px;
+            padding: 24px 28px; margin-bottom: 28px; text-align: center;
+        }
+        .discipline-ring-container { display: inline-block; position: relative; width: 160px; height: 160px; margin: 12px 0; }
+        .discipline-ring { transform: rotate(-90deg); }
+        .discipline-ring .bg-ring { fill: none; stroke: var(--border); stroke-width: 10; }
+        .discipline-ring .fg-ring { fill: none; stroke-width: 10; stroke-linecap: round; transition: stroke-dashoffset 1.5s ease, stroke 0.5s; }
+        .discipline-score-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 2.4rem; font-weight: 900; }
+        .discipline-label { font-size: 0.82rem; color: var(--text-dim); margin-top: 4px; }
+        .discipline-factors { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 16px; }
+        .discipline-factor {
+            background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 10px;
+            padding: 8px 14px; font-size: 0.75rem; display: flex; align-items: center; gap: 6px;
+        }
+        .factor-ok { color: var(--green); }
+        .factor-warn { color: var(--gold); }
+        .factor-bad { color: var(--red); }
+
+        /* Advanced Stats */
+        .adv-stats-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px; margin-bottom: 28px;
+        }
+        .adv-stat {
+            background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+            padding: 18px; text-align: center; transition: transform 0.3s, border-color 0.3s;
+        }
+        .adv-stat:hover { transform: translateY(-2px); border-color: var(--blue); }
+        .adv-stat .adv-label { font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; margin-bottom: 6px; }
+        .adv-stat .adv-value { font-size: 1.4rem; font-weight: 800; }
+
+        /* Goal Tracker */
+        .goal-wrapper {
+            background: linear-gradient(135deg, rgba(77,141,255,0.04), rgba(167,139,250,0.04));
+            border: 1px solid var(--border); border-radius: 18px;
+            padding: 24px 28px; margin-bottom: 28px;
+        }
+        .goal-bar-track { height: 12px; background: rgba(90,107,138,0.1); border-radius: 6px; overflow: hidden; position: relative; margin: 14px 0 8px; }
+        .goal-bar-fill { height: 100%; border-radius: 6px; transition: width 1.5s ease; position: relative; }
+        .goal-bar-fill::after { content: ''; position: absolute; right: 0; top: -2px; bottom: -2px; width: 4px; background: white; border-radius: 2px; box-shadow: 0 0 8px rgba(255,255,255,0.5); }
+        .goal-info { display: flex; justify-content: space-between; font-size: 0.82rem; }
+        .goal-info .current { font-weight: 700; }
+        .goal-milestones { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+        .goal-milestone { font-size: 0.72rem; padding: 4px 10px; border-radius: 6px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); color: var(--text-dim); }
+        .goal-milestone.reached { background: var(--green-glow); color: var(--green); border-color: rgba(0,230,138,0.2); }
+
         /* Footer */
         .footer {
             text-align: center; padding: 40px 0 20px; color: var(--text-dim);
@@ -448,6 +522,13 @@
             .month-btn { padding: 8px 14px; font-size: 0.8rem; }
         }
         
+        @media (max-width: 768px) {
+            #disciplineGoalRow { grid-template-columns: 1fr !important; }
+            .equity-curve-wrapper, .bar-chart-wrapper { padding: 16px; }
+            .equity-svg { height: 160px; }
+            .bar-svg { height: 150px; }
+            .adv-stats-grid { grid-template-columns: repeat(2, 1fr); }
+        }
         @media (max-width: 400px) {
             .stats-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
             .cal-day { min-height: 48px; }
@@ -514,6 +595,46 @@
             <div class="cumulative-bar" id="cumulativeBar"></div>
         </div>
         
+        <!-- Equity Curve -->
+        <div class="equity-curve-wrapper anim-fade anim-delay-2">
+            <div class="section-title">📈 Equity Curve (All Time)</div>
+            <svg class="equity-svg" id="equityCurve" preserveAspectRatio="none"></svg>
+        </div>
+
+        <!-- Daily PnL Bar Chart -->
+        <div class="bar-chart-wrapper anim-fade anim-delay-3">
+            <div class="section-title">📊 Daily PnL — <span id="barChartMonth"></span></div>
+            <svg class="bar-svg" id="barChart" preserveAspectRatio="none"></svg>
+        </div>
+
+        <!-- Discipline + Goal row -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:0;" class="anim-fade anim-delay-3" id="disciplineGoalRow">
+            <!-- Discipline Score -->
+            <div class="discipline-wrapper">
+                <div class="section-title" style="justify-content:center;">🛡️ Discipline Score</div>
+                <div class="discipline-ring-container">
+                    <svg class="discipline-ring" viewBox="0 0 160 160" width="160" height="160">
+                        <circle class="bg-ring" cx="80" cy="80" r="65"/>
+                        <circle class="fg-ring" id="disciplineRing" cx="80" cy="80" r="65"/>
+                    </svg>
+                    <div class="discipline-score-text" id="disciplineScore">0</div>
+                </div>
+                <div class="discipline-label" id="disciplineLabel">Calculating...</div>
+                <div class="discipline-factors" id="disciplineFactors"></div>
+            </div>
+
+            <!-- Goal Tracker -->
+            <div class="goal-wrapper">
+                <div class="section-title">🎯 Monthly Goal</div>
+                <div id="goalContent"></div>
+            </div>
+        </div>
+
+        <!-- Advanced Stats -->
+        <div class="section-title anim-fade anim-delay-3" style="margin-top:28px;">⚡ Advanced Analytics</div>
+        <div class="section-divider"></div>
+        <div class="adv-stats-grid anim-fade anim-delay-3" id="advStats"></div>
+
         <!-- Stats Cards -->
         <div class="section-title anim-fade anim-delay-3">📈 Monthly Statistics</div>
         <div class="section-divider"></div>
@@ -712,7 +833,7 @@
         }).join('');
     }
     
-    function setMonth(m) { currentMonth = m; renderMonthSelector(); renderCalendar(); renderStats(); }
+    function setMonth(m) { currentMonth = m; renderMonthSelector(); renderCalendar(); renderStats(); renderBarChart(); renderDiscipline(); renderGoalTracker(); }
     
     function renderCalendar() {
         const grid = document.getElementById('calendarGrid');
@@ -944,11 +1065,192 @@
         }).join('');
     }
     
+    // ==================== NEW FEATURES ====================
+
+    function renderEquityCurve() {
+        const svg = document.getElementById('equityCurve');
+        const allDays = [];
+        Object.entries(DAILY_PNL).forEach(([month, days]) => {
+            Object.entries(days).forEach(([day, val]) => {
+                allDays.push({ sort: month+'-'+String(day).padStart(2,'0'), val, label: day+'/'+month.split('-')[1] });
+            });
+        });
+        allDays.sort((a,b) => a.sort.localeCompare(b.sort));
+        if (allDays.length < 2) return;
+
+        let cum = 0;
+        const points = allDays.map(d => { cum += d.val; return { ...d, cum }; });
+        const w = svg.clientWidth || 800, h = svg.clientHeight || 200;
+        const pad = { top: 20, right: 15, bottom: 25, left: 55 };
+        const gw = w - pad.left - pad.right, gh = h - pad.top - pad.bottom;
+        const minY = Math.min(0, ...points.map(p=>p.cum)), maxY = Math.max(0, ...points.map(p=>p.cum));
+        const rangeY = maxY - minY || 1;
+
+        const xScale = i => pad.left + (i / (points.length - 1)) * gw;
+        const yScale = v => pad.top + (1 - (v - minY) / rangeY) * gh;
+
+        let svgContent = '';
+        // Grid lines
+        for (let i = 0; i < 4; i++) {
+            const v = minY + (rangeY * i / 3);
+            const y = yScale(v);
+            svgContent += `<line class="grid-line" x1="${pad.left}" y1="${y}" x2="${w-pad.right}" y2="${y}"/>`;
+            svgContent += `<text class="axis-label" x="${pad.left-8}" y="${y+3}" text-anchor="end">${v>=0?'+':''}$${v.toFixed(0)}</text>`;
+        }
+        // Zero line
+        const zeroY = yScale(0);
+        svgContent += `<line class="zero-line" x1="${pad.left}" y1="${zeroY}" x2="${w-pad.right}" y2="${zeroY}"/>`;
+
+        // Build path
+        const pathPts = points.map((p,i) => `${xScale(i)},${yScale(p.cum)}`);
+        const lineColor = points[points.length-1].cum >= 0 ? 'var(--green)' : 'var(--red)';
+        const areaColor = points[points.length-1].cum >= 0 ? 'var(--green)' : 'var(--red)';
+        svgContent += `<polyline class="line" points="${pathPts.join(' ')}" stroke="${lineColor}"/>`;
+        // Area
+        svgContent += `<polygon class="area" points="${xScale(0)},${yScale(0)} ${pathPts.join(' ')} ${xScale(points.length-1)},${yScale(0)}" fill="${areaColor}"/>`;
+        // Dots
+        points.forEach((p,i) => {
+            const color = p.cum >= 0 ? 'var(--green)' : 'var(--red)';
+            svgContent += `<circle class="dot" cx="${xScale(i)}" cy="${yScale(p.cum)}" fill="${color}" stroke="var(--card)"><title>${p.label}: ${p.cum>=0?'+':''}$${p.cum.toFixed(2)}</title></circle>`;
+        });
+        // X labels (first, mid, last)
+        [0, Math.floor(points.length/2), points.length-1].forEach(i => {
+            svgContent += `<text class="axis-label" x="${xScale(i)}" y="${h-4}" text-anchor="middle">${points[i].label}</text>`;
+        });
+
+        svg.innerHTML = svgContent;
+    }
+
+    function renderBarChart() {
+        const svg = document.getElementById('barChart');
+        const data = DAILY_PNL[currentMonth] || {};
+        const entries = Object.entries(data).map(([d,v]) => ({day:parseInt(d),val:v})).sort((a,b)=>a.day-b.day);
+        const names = {"01":"January","02":"February","03":"March","04":"April","05":"May","06":"June","07":"July","08":"August","09":"September","10":"October","11":"November","12":"December"};
+        document.getElementById('barChartMonth').textContent = names[currentMonth.split('-')[1]] || '';
+        if (!entries.length) { svg.innerHTML = '<text x="50%" y="50%" text-anchor="middle" fill="var(--text-dim)" font-size="14">No data</text>'; return; }
+
+        const w = svg.clientWidth || 800, h = svg.clientHeight || 180;
+        const pad = { top: 20, right: 10, bottom: 25, left: 50 };
+        const gw = w - pad.left - pad.right, gh = h - pad.top - pad.bottom;
+        const maxAbs = Math.max(...entries.map(e=>Math.abs(e.val)), 1);
+        const barW = Math.min(Math.floor(gw / entries.length) - 4, 30);
+        const gap = (gw - barW * entries.length) / (entries.length + 1);
+        const zeroY = pad.top + gh / 2;
+
+        let svgContent = `<line class="zero-line" x1="${pad.left}" y1="${zeroY}" x2="${w-pad.right}" y2="${zeroY}" style="opacity:0.6"/>`;
+        entries.forEach((e, i) => {
+            const x = pad.left + gap + i * (barW + gap);
+            const barH = (Math.abs(e.val) / maxAbs) * (gh / 2);
+            const y = e.val >= 0 ? zeroY - barH : zeroY;
+            const color = e.val >= 0 ? 'var(--green)' : 'var(--red)';
+            svgContent += `<rect class="bar" x="${x}" y="${y}" width="${barW}" height="${barH}" fill="${color}"><title>Day ${e.day}: ${e.val>=0?'+':''}$${e.val.toFixed(2)}</title></rect>`;
+            svgContent += `<text class="bar-label" x="${x+barW/2}" y="${h-6}">${e.day}</text>`;
+            if (Math.abs(e.val) > maxAbs * 0.15) {
+                const valY = e.val >= 0 ? y - 4 : y + barH + 10;
+                svgContent += `<text class="bar-val" x="${x+barW/2}" y="${valY}" fill="${color}">${e.val>=0?'+':''}${Math.abs(e.val)>=1000?(e.val/1000).toFixed(1)+'K':e.val.toFixed(0)}</text>`;
+            }
+        });
+        svg.innerHTML = svgContent;
+    }
+
+    function renderDiscipline() {
+        const data = DAILY_PNL[currentMonth] || {};
+        const vals = Object.values(data);
+        if (!vals.length) return;
+
+        // Factors
+        const daysOver50Loss = vals.filter(v => v < -50).length;
+        const daysOver50Pct = vals.length > 0 ? (1 - daysOver50Loss / vals.length) * 100 : 100;
+        const consecutiveLosses = (() => { let max=0,c=0; vals.forEach(v => { if(v<0){c++;max=Math.max(max,c)}else{c=0} }); return max; })();
+        const stoppedAfter2 = consecutiveLosses <= 2 ? 100 : Math.max(0, 100 - (consecutiveLosses - 2) * 25);
+        const greenRatio = vals.filter(v=>v>0).length / vals.length * 100;
+        const avgWin = vals.filter(v=>v>0).length ? vals.filter(v=>v>0).reduce((s,v)=>s+v,0)/vals.filter(v=>v>0).length : 0;
+        const avgLoss = vals.filter(v=>v<0).length ? Math.abs(vals.filter(v=>v<0).reduce((s,v)=>s+v,0)/vals.filter(v=>v<0).length) : 0;
+        const rrScore = avgLoss > 0 ? Math.min((avgWin / avgLoss) / 2 * 100, 100) : 100;
+
+        const score = Math.round(daysOver50Pct * 0.35 + stoppedAfter2 * 0.3 + rrScore * 0.2 + Math.min(greenRatio * 1.5, 100) * 0.15);
+        const clampedScore = Math.max(0, Math.min(100, score));
+
+        const ring = document.getElementById('disciplineRing');
+        const circ = 2 * Math.PI * 65;
+        ring.style.strokeDasharray = circ;
+        ring.style.strokeDashoffset = circ - (clampedScore / 100) * circ;
+        ring.style.stroke = clampedScore >= 75 ? 'var(--green)' : clampedScore >= 50 ? 'var(--gold)' : 'var(--red)';
+
+        const scoreEl = document.getElementById('disciplineScore');
+        scoreEl.textContent = clampedScore;
+        scoreEl.style.color = clampedScore >= 75 ? 'var(--green)' : clampedScore >= 50 ? 'var(--gold)' : 'var(--red)';
+
+        document.getElementById('disciplineLabel').textContent = clampedScore >= 80 ? '🔥 Excellent Discipline!' : clampedScore >= 60 ? '⚡ Decent — Room to Improve' : '⚠️ Needs Work!';
+
+        const factors = [
+            { label: `$50 limit: ${daysOver50Loss} violations`, cls: daysOver50Loss === 0 ? 'factor-ok' : daysOver50Loss <= 2 ? 'factor-warn' : 'factor-bad', icon: daysOver50Loss === 0 ? '✅' : '⚠️' },
+            { label: `Max consec. losses: ${consecutiveLosses}`, cls: consecutiveLosses <= 2 ? 'factor-ok' : consecutiveLosses <= 3 ? 'factor-warn' : 'factor-bad', icon: consecutiveLosses <= 2 ? '✅' : '❌' },
+            { label: `Avg R:R ${avgLoss>0?(avgWin/avgLoss).toFixed(1):'∞'}:1`, cls: avgWin/avgLoss >= 2 ? 'factor-ok' : avgWin/avgLoss >= 1 ? 'factor-warn' : 'factor-bad', icon: avgWin/avgLoss >= 2 ? '✅' : '⚠️' },
+        ];
+        document.getElementById('disciplineFactors').innerHTML = factors.map(f => `<div class="discipline-factor"><span>${f.icon}</span><span class="${f.cls}">${f.label}</span></div>`).join('');
+    }
+
+    function renderAdvancedStats() {
+        const allDays = [];
+        Object.entries(DAILY_PNL).forEach(([month, days]) => {
+            Object.entries(days).forEach(([day, val]) => { allDays.push(val); });
+        });
+        const wins = allDays.filter(v=>v>0), losses = allDays.filter(v=>v<0);
+        const avgWin = wins.length ? wins.reduce((s,v)=>s+v,0)/wins.length : 0;
+        const avgLoss = losses.length ? Math.abs(losses.reduce((s,v)=>s+v,0)/losses.length) : 0;
+        const profitFactor = avgLoss > 0 && losses.length > 0 ? (wins.reduce((s,v)=>s+v,0)) / Math.abs(losses.reduce((s,v)=>s+v,0)) : 0;
+
+        // Max drawdown
+        let peak = 0, cum = 0, maxDD = 0;
+        allDays.forEach(v => { cum += v; peak = Math.max(peak, cum); maxDD = Math.min(maxDD, cum - peak); });
+
+        // Expectancy
+        const wr = allDays.length ? wins.length / allDays.length : 0;
+        const expectancy = wr * avgWin - (1 - wr) * avgLoss;
+
+        const stats = [
+            { label: 'Avg Win', value: '+$'+avgWin.toFixed(2), color: 'var(--green)' },
+            { label: 'Avg Loss', value: '-$'+avgLoss.toFixed(2), color: 'var(--red)' },
+            { label: 'Profit Factor', value: profitFactor.toFixed(2), color: profitFactor >= 1 ? 'var(--green)' : 'var(--red)' },
+            { label: 'Max Drawdown', value: '$'+maxDD.toFixed(2), color: 'var(--red)' },
+            { label: 'Expectancy', value: (expectancy>=0?'+':'')+'$'+expectancy.toFixed(2), color: expectancy >= 0 ? 'var(--green)' : 'var(--red)' },
+            { label: 'Total Trades', value: allDays.length, color: 'var(--blue)' },
+        ];
+        document.getElementById('advStats').innerHTML = stats.map(s => `<div class="adv-stat"><div class="adv-label">${s.label}</div><div class="adv-value" style="color:${s.color}">${s.value}</div></div>`).join('');
+    }
+
+    function renderGoalTracker() {
+        const MONTHLY_GOAL = 500; // $500 monthly goal
+        const data = DAILY_PNL[currentMonth] || {};
+        const monthPnl = Object.values(data).reduce((s,v)=>s+v, 0);
+        const pct = Math.max(0, Math.min((monthPnl / MONTHLY_GOAL) * 100, 100));
+        const color = monthPnl >= MONTHLY_GOAL ? 'var(--green)' : monthPnl >= 0 ? 'var(--blue)' : 'var(--red)';
+        const milestones = [100, 250, 500].map(m => ({val:m, reached: monthPnl >= m}));
+
+        document.getElementById('goalContent').innerHTML = `
+            <div style="font-size:0.85rem;color:var(--text-dim);margin-bottom:4px;">Target: <strong style="color:var(--text)">+$${MONTHLY_GOAL}</strong> this month</div>
+            <div class="goal-bar-track"><div class="goal-bar-fill" style="width:${monthPnl>0?pct:0}%;background:${color}"></div></div>
+            <div class="goal-info">
+                <span class="current" style="color:${color}">${monthPnl>=0?'+':''}$${monthPnl.toFixed(2)}</span>
+                <span style="color:var(--text-dim)">${pct.toFixed(0)}% of goal</span>
+            </div>
+            <div class="goal-milestones">
+                ${milestones.map(m=>`<div class="goal-milestone ${m.reached?'reached':''}">$${m.val} ${m.reached?'✅':'⬜'}</div>`).join('')}
+            </div>
+        `;
+    }
+
     // Init
     renderMonthSelector();
     renderCalendar();
     renderStats();
     renderOpenPositions();
+    renderEquityCurve();
+    renderBarChart();
+    renderDiscipline();
+    renderAdvancedStats();
+    renderGoalTracker();
     </script>
 </body>
 </html>
