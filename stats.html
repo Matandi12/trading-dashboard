@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stats — TradingHub</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <div class="bg-glow"></div>
+
+    <div class="container page-content">
+        <div class="page-header">
+            <h1>📈 Statistics & Analytics</h1>
+            <p>Deep dive into your performance</p>
+        </div>
+
+        <!-- Win Rate -->
+        <div class="card anim-fade anim-delay-1" style="margin-bottom:28px;text-align:center">
+            <div class="section-title" style="justify-content:center">🎯 Win Rate</div>
+            <div id="winRateDisplay" style="font-size:3.5rem;font-weight:900;color:var(--purple)">0%</div>
+            <div style="max-width:400px;margin:16px auto 0">
+                <div class="progress-track" style="height:12px">
+                    <div class="progress-fill" id="winRateBar" style="width:0%;background:var(--green)"></div>
+                </div>
+                <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:0.78rem;color:var(--text-dim)">
+                    <span id="winsCount">0 wins</span>
+                    <span id="lossesCount">0 losses</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Key Metrics -->
+        <div class="adv-stats-grid anim-fade anim-delay-2" id="keyMetrics"></div>
+
+        <!-- Streak Analysis -->
+        <div class="streak-section anim-fade anim-delay-3">
+            <div class="streak-header">
+                <div class="section-title" style="margin-bottom:0">🔥 Streak Analysis</div>
+                <div class="streak-counters" id="streakCounters"></div>
+            </div>
+            <div class="streak-bar" id="streakBar"></div>
+        </div>
+
+        <!-- PnL Distribution -->
+        <div class="card anim-fade anim-delay-3" style="margin-bottom:28px">
+            <div class="section-title">📊 PnL Distribution</div>
+            <div id="distribution" style="display:flex;flex-direction:column;gap:8px;margin-top:16px"></div>
+        </div>
+
+        <!-- Day of Week Analysis -->
+        <div class="card anim-fade anim-delay-4" style="margin-bottom:28px">
+            <div class="section-title">📆 Day of Week Analysis</div>
+            <div id="dowAnalysis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-top:16px"></div>
+        </div>
+
+        <!-- Discipline Score -->
+        <div class="discipline-wrapper anim-fade anim-delay-4">
+            <div class="section-title" style="justify-content:center">🛡️ Discipline Score</div>
+            <div class="discipline-ring-container">
+                <svg class="discipline-ring" viewBox="0 0 160 160" width="160" height="160">
+                    <circle class="bg-ring" cx="80" cy="80" r="65"/>
+                    <circle class="fg-ring" id="disciplineRing" cx="80" cy="80" r="65"/>
+                </svg>
+                <div class="discipline-score-text" id="disciplineScore">0</div>
+            </div>
+            <div id="disciplineLabel" style="color:var(--text-dim);font-size:0.85rem;margin-top:4px"></div>
+            <div class="discipline-factors" id="disciplineFactors"></div>
+        </div>
+
+        <div class="footer">TradingHub &copy; 2026</div>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="nav.js"></script>
+    <script>
+        renderNav('stats');
+        initParticles();
+
+        const allDays = getAllDaysSorted();
+        const allVals = allDays.map(d => d.val);
+        const wins = allVals.filter(v => v > 0);
+        const losses = allVals.filter(v => v < 0);
+        const total = allVals.filter(v => v !== 0).length;
+        const winRate = total > 0 ? (wins.length / total * 100).toFixed(1) : 0;
+
+        // Win Rate
+        document.getElementById('winRateDisplay').textContent = winRate + '%';
+        document.getElementById('winRateBar').style.width = winRate + '%';
+        document.getElementById('winsCount').textContent = wins.length + ' wins';
+        document.getElementById('lossesCount').textContent = losses.length + ' losses';
+
+        // Key metrics
+        const avgWin = wins.length ? wins.reduce((s,v)=>s+v,0)/wins.length : 0;
+        const avgLoss = losses.length ? Math.abs(losses.reduce((s,v)=>s+v,0)/losses.length) : 0;
+        const profitFactor = losses.length ? wins.reduce((s,v)=>s+v,0) / Math.abs(losses.reduce((s,v)=>s+v,0)) : 0;
+        let peak = 0, cum = 0, maxDD = 0;
+        allVals.forEach(v => { cum += v; peak = Math.max(peak, cum); maxDD = Math.min(maxDD, cum - peak); });
+        const wr = total > 0 ? wins.length / total : 0;
+        const expectancy = wr * avgWin - (1 - wr) * avgLoss;
+        const allPnl = allVals.reduce((s,v)=>s+v,0);
+        const stdDev = Math.sqrt(allVals.reduce((s,v)=>s+Math.pow(v-allPnl/allVals.length,2),0)/allVals.length);
+        const sharpe = stdDev > 0 ? (allPnl/allVals.length) / stdDev * Math.sqrt(252) : 0;
+
+        document.getElementById('keyMetrics').innerHTML = [
+            { label: 'Avg Win', value: '+$'+avgWin.toFixed(2), color: 'var(--green)' },
+            { label: 'Avg Loss', value: '-$'+avgLoss.toFixed(2), color: 'var(--red)' },
+            { label: 'Profit Factor', value: profitFactor.toFixed(2), color: profitFactor>=1?'var(--green)':'var(--red)' },
+            { label: 'Max Drawdown', value: '$'+maxDD.toFixed(2), color: 'var(--red)' },
+            { label: 'Expectancy', value: formatPnl(expectancy), color: pnlColor(expectancy) },
+            { label: 'Sharpe Ratio', value: sharpe.toFixed(2), color: sharpe>=0?'var(--green)':'var(--red)' },
+            { label: 'Total PnL', value: formatPnl(allPnl), color: pnlColor(allPnl) },
+            { label: 'Trading Days', value: total, color: 'var(--blue)' },
+        ].map(s => `<div class="adv-stat"><div class="adv-label">${s.label}</div><div class="adv-value" style="color:${s.color}">${s.value}</div></div>`).join('');
+
+        // Streaks
+        const streaks = calcStreaks(allDays);
+        document.getElementById('streakCounters').innerHTML = `
+            <div class="streak-counter current">Current: ${streaks.current>0?'+':''}${streaks.current}</div>
+            <div class="streak-counter best">Best Win: ${streaks.best}🔥</div>
+            <div class="streak-counter worst">Worst Loss: ${streaks.worst}💀</div>
+        `;
+        document.getElementById('streakBar').innerHTML = allDays.slice(-20).map(d =>
+            `<div class="streak-dot ${d.val>=0?'streak-win':'streak-loss'}" title="${d.sort}: ${formatPnl(d.val)}">${d.val>=0?'W':'L'}</div>`
+        ).join('');
+
+        // PnL Distribution
+        const ranges = [
+            { label: '> +$200', min: 200, max: Infinity },
+            { label: '+$50 to +$200', min: 50, max: 200 },
+            { label: '+$0 to +$50', min: 0, max: 50 },
+            { label: '-$50 to $0', min: -50, max: 0 },
+            { label: '-$200 to -$50', min: -200, max: -50 },
+            { label: '< -$200', min: -Infinity, max: -200 },
+        ];
+        const maxCount = Math.max(...ranges.map(r => allVals.filter(v => v >= r.min && v < r.max).length), 1);
+        document.getElementById('distribution').innerHTML = ranges.map(r => {
+            const count = allVals.filter(v => r.min === -Infinity ? v < r.max : r.max === Infinity ? v >= r.min : v >= r.min && v < r.max).length;
+            const pct = (count / maxCount * 100).toFixed(0);
+            const color = r.min >= 0 ? 'var(--green)' : 'var(--red)';
+            return `<div style="display:flex;align-items:center;gap:12px">
+                <div style="width:120px;font-size:0.78rem;color:var(--text-dim);text-align:right;flex-shrink:0">${r.label}</div>
+                <div style="flex:1"><div class="progress-track"><div class="progress-fill" style="width:${pct}%;background:${color}"></div></div></div>
+                <div style="width:30px;font-size:0.85rem;font-weight:700;color:${color}">${count}</div>
+            </div>`;
+        }).join('');
+
+        // Day of week
+        const dowNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+        const dowData = Array(7).fill(null).map(() => ({ total: 0, count: 0, wins: 0 }));
+        allDays.forEach(d => {
+            const [y,m] = d.month.split('-').map(Number);
+            const dow = new Date(y, m-1, d.day).getDay();
+            dowData[dow].total += d.val;
+            dowData[dow].count++;
+            if (d.val > 0) dowData[dow].wins++;
+        });
+        document.getElementById('dowAnalysis').innerHTML = dowData.map((d, i) => {
+            if (d.count === 0) return `<div class="card" style="padding:14px;text-align:center"><div style="font-weight:700;margin-bottom:4px">${dowNames[i]}</div><div style="color:var(--text-dim);font-size:0.78rem">No data</div></div>`;
+            const avg = d.total / d.count;
+            const wr = (d.wins / d.count * 100).toFixed(0);
+            return `<div class="card" style="padding:14px;text-align:center">
+                <div style="font-weight:700;margin-bottom:6px">${dowNames[i]}</div>
+                <div style="font-size:1.1rem;font-weight:800;color:${pnlColor(avg)}">${formatPnl(avg)}</div>
+                <div style="font-size:0.72rem;color:var(--text-dim);margin-top:4px">${d.count} days · ${wr}% WR</div>
+            </div>`;
+        }).join('');
+
+        // Discipline
+        const monthVals = Object.values(DAILY_PNL["2026-02"] || {});
+        const daysOver50 = monthVals.filter(v => v < -50).length;
+        const daysOver50Pct = monthVals.length > 0 ? (1 - daysOver50 / monthVals.length) * 100 : 100;
+        const consLoss = (() => { let max=0,c=0; monthVals.forEach(v => { if(v<0){c++;max=Math.max(max,c)}else{c=0}}); return max; })();
+        const stoppedAfter2 = consLoss <= 2 ? 100 : Math.max(0, 100 - (consLoss - 2) * 25);
+        const rrScore = avgLoss > 0 ? Math.min((avgWin / avgLoss) / 2 * 100, 100) : 100;
+        const greenRatio = wins.length / total * 100;
+        const score = Math.max(0, Math.min(100, Math.round(daysOver50Pct * 0.35 + stoppedAfter2 * 0.3 + rrScore * 0.2 + Math.min(greenRatio * 1.5, 100) * 0.15)));
+
+        const ring = document.getElementById('disciplineRing');
+        const circ = 2 * Math.PI * 65;
+        ring.style.strokeDasharray = circ;
+        ring.style.strokeDashoffset = circ - (score / 100) * circ;
+        ring.style.stroke = score >= 75 ? 'var(--green)' : score >= 50 ? 'var(--gold)' : 'var(--red)';
+        const scoreEl = document.getElementById('disciplineScore');
+        scoreEl.textContent = score;
+        scoreEl.style.color = score >= 75 ? 'var(--green)' : score >= 50 ? 'var(--gold)' : 'var(--red)';
+        document.getElementById('disciplineLabel').textContent = score >= 80 ? '🔥 Excellent Discipline!' : score >= 60 ? '⚡ Decent — Room to Improve' : '⚠️ Needs Work!';
+
+        document.getElementById('disciplineFactors').innerHTML = [
+            { label: `$50 limit: ${daysOver50} violations`, cls: daysOver50===0?'factor-ok':daysOver50<=2?'factor-warn':'factor-bad', icon: daysOver50===0?'✅':'⚠️' },
+            { label: `Max consec. losses: ${consLoss}`, cls: consLoss<=2?'factor-ok':consLoss<=3?'factor-warn':'factor-bad', icon: consLoss<=2?'✅':'❌' },
+            { label: `Avg R:R ${avgLoss>0?(avgWin/avgLoss).toFixed(1):'∞'}:1`, cls: avgWin/avgLoss>=2?'factor-ok':avgWin/avgLoss>=1?'factor-warn':'factor-bad', icon: avgWin/avgLoss>=2?'✅':'⚠️' },
+        ].map(f => `<div class="discipline-factor"><span>${f.icon}</span><span class="${f.cls}">${f.label}</span></div>`).join('');
+    </script>
+</body>
+</html>

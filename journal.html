@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Journal — TradingHub</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <div class="bg-glow"></div>
+
+    <div class="container page-content">
+        <div class="page-header">
+            <h1>📓 Trading Journal</h1>
+            <p>Trade history, notes & rules</p>
+        </div>
+
+        <!-- Monthly Summary Cards -->
+        <div class="anim-fade anim-delay-1" style="margin-bottom:28px">
+            <div class="section-title">📊 Monthly Summaries</div>
+            <div id="monthlySummaries" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px"></div>
+        </div>
+
+        <!-- Rules Compliance -->
+        <div class="anim-fade anim-delay-2" style="margin-bottom:28px">
+            <div class="section-title">⚠️ Rules Compliance</div>
+            <div class="section-divider"></div>
+            <div id="rulesTracker" style="display:flex;flex-direction:column;gap:12px"></div>
+        </div>
+
+        <!-- Lessons & Notes -->
+        <div class="card anim-fade anim-delay-3" style="margin-bottom:28px">
+            <div class="section-title">💡 Key Lessons</div>
+            <div id="lessons" style="display:flex;flex-direction:column;gap:10px"></div>
+        </div>
+
+        <!-- Full Trade History -->
+        <div class="anim-fade anim-delay-4">
+            <div class="section-title">📋 Full Trade History</div>
+            <div class="section-divider"></div>
+            <div class="trades-wrapper">
+                <table class="trades-table">
+                    <thead>
+                        <tr>
+                            <th>#</th><th>Date</th><th>Pair</th><th>Direction</th>
+                            <th>Entry</th><th>Exit</th><th>Leverage</th><th>Result</th><th>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tradesBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="footer">TradingHub &copy; 2026</div>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="nav.js"></script>
+    <script>
+        renderNav('journal');
+        initParticles();
+
+        // Monthly summaries
+        document.getElementById('monthlySummaries').innerHTML = Object.keys(DAILY_PNL).sort().map(m => {
+            const vals = Object.values(DAILY_PNL[m]);
+            const total = vals.reduce((s,v)=>s+v,0);
+            const wins = vals.filter(v=>v>0);
+            const losses = vals.filter(v=>v<0);
+            const best = vals.length ? Math.max(...vals) : 0;
+            const worst = vals.length ? Math.min(...vals) : 0;
+            const avgWin = wins.length ? wins.reduce((s,v)=>s+v,0)/wins.length : 0;
+            const avgLoss = losses.length ? Math.abs(losses.reduce((s,v)=>s+v,0)/losses.length) : 0;
+            const color = total >= 0 ? 'var(--green)' : 'var(--red)';
+            const wr = vals.length > 0 ? (wins.length/vals.length*100).toFixed(0) : 0;
+
+            return `<div class="card">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                    <div style="font-weight:800;font-size:1.05rem">${getMonthName(m.split('-')[1])} ${m.split('-')[0]}</div>
+                    <div style="font-size:1.3rem;font-weight:900;color:${color}">${formatPnl(total)}</div>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;font-size:0.82rem">
+                    <div><span style="color:var(--text-dim)">Days:</span> <strong>${vals.length}</strong></div>
+                    <div><span style="color:var(--text-dim)">Win Rate:</span> <strong style="color:var(--purple)">${wr}%</strong></div>
+                    <div><span style="color:var(--text-dim)">Best:</span> <strong class="green">${formatPnl(best)}</strong></div>
+                    <div><span style="color:var(--text-dim)">Worst:</span> <strong class="red">${formatPnl(worst)}</strong></div>
+                    <div><span style="color:var(--text-dim)">Avg Win:</span> <strong class="green">+$${avgWin.toFixed(2)}</strong></div>
+                    <div><span style="color:var(--text-dim)">Avg Loss:</span> <strong class="red">-$${avgLoss.toFixed(2)}</strong></div>
+                </div>
+                <div class="progress-track" style="margin-top:12px">
+                    <div class="progress-fill" style="width:${wr}%;background:var(--green)"></div>
+                </div>
+            </div>`;
+        }).join('');
+
+        // Rules compliance
+        const allDays = getAllDaysSorted();
+        const allVals = allDays.map(d => d.val);
+        const daysOver50Loss = allVals.filter(v => v < -50).length;
+        const maxConsecLoss = (() => { let max=0,c=0; allVals.forEach(v => { if(v<0){c++;max=Math.max(max,c)}else{c=0}}); return max; })();
+        const daysOver1kLoss = allVals.filter(v => v < -1000).length;
+        const avgLoss = allVals.filter(v=>v<0).length ? Math.abs(allVals.filter(v=>v<0).reduce((s,v)=>s+v,0)/allVals.filter(v=>v<0).length) : 0;
+
+        const rules = [
+            { rule: '📏 Risk 1-2% per trade', status: avgLoss < INITIAL_ASSETS * 0.02, detail: `Avg loss: $${avgLoss.toFixed(2)} (${(avgLoss/INITIAL_ASSETS*100).toFixed(1)}% of capital)` },
+            { rule: '🛑 Max $50 daily loss', status: daysOver50Loss === 0, detail: `${daysOver50Loss} violations out of ${allVals.length} days` },
+            { rule: '⚡ Max leverage x10', status: true, detail: 'Manual tracking — check positions' },
+            { rule: '📐 Min R:R 1:2', status: true, detail: 'Check individual trades' },
+            { rule: '🚫 2 losses = stop', status: maxConsecLoss <= 2, detail: `Max consecutive losses: ${maxConsecLoss}` },
+            { rule: '💀 No $1K+ losses', status: daysOver1kLoss === 0, detail: `${daysOver1kLoss} days with >$1K loss` },
+        ];
+
+        document.getElementById('rulesTracker').innerHTML = rules.map(r => {
+            const color = r.status ? 'rgba(0,230,138,0.08)' : 'rgba(255,77,106,0.08)';
+            const borderColor = r.status ? 'rgba(0,230,138,0.2)' : 'rgba(255,77,106,0.2)';
+            const icon = r.status ? '✅' : '❌';
+            return `<div style="background:${color};border:1px solid ${borderColor};border-radius:14px;padding:16px 20px;display:flex;align-items:center;gap:12px">
+                <span style="font-size:1.3rem">${icon}</span>
+                <div style="flex:1">
+                    <div style="font-weight:700;font-size:0.9rem">${r.rule}</div>
+                    <div style="color:var(--text-dim);font-size:0.78rem;margin-top:2px">${r.detail}</div>
+                </div>
+            </div>`;
+        }).join('');
+
+        // Lessons
+        const lessons = [
+            { icon: '🎯', text: 'Stick to the plan — emotional trades always lose more than planned trades win.' },
+            { icon: '📉', text: 'January\'s $1K+ loss days were caused by over-leveraging. Never go above 10x.' },
+            { icon: '✅', text: 'February shows improved discipline — smaller losses, more consistent.' },
+            { icon: '🔥', text: 'Best streaks happen when following the 2-loss stop rule religiously.' },
+            { icon: '💡', text: 'Take profits at TP levels. Don\'t get greedy — the market always comes back.' },
+        ];
+        document.getElementById('lessons').innerHTML = lessons.map(l =>
+            `<div style="display:flex;gap:12px;align-items:flex-start;padding:12px 16px;background:rgba(255,255,255,0.02);border-radius:12px;border:1px solid var(--border)">
+                <span style="font-size:1.2rem;flex-shrink:0">${l.icon}</span>
+                <div style="font-size:0.88rem;line-height:1.5;color:var(--text)">${l.text}</div>
+            </div>`
+        ).join('');
+
+        // Trades table
+        document.getElementById('tradesBody').innerHTML = TRADES.slice().reverse().map((t, i) => {
+            const dirClass = t.result >= 0 ? 'badge-long' : 'badge-short';
+            const dirLabel = t.result >= 0 ? '📈 LONG' : '📉 SHORT';
+            return `<tr>
+                <td style="color:var(--text-dim)">${TRADES.length-i}</td>
+                <td>${t.date}</td>
+                <td><strong>${t.pair}</strong></td>
+                <td><span class="badge ${dirClass}">${dirLabel}</span></td>
+                <td style="color:var(--text-dim)">${t.entry}</td>
+                <td style="color:var(--text-dim)">${t.exit}</td>
+                <td style="color:var(--text-dim)">${t.lev}</td>
+                <td style="color:${pnlColor(t.result)};font-weight:800">${formatPnl(t.result)}</td>
+                <td style="color:var(--text-dim);font-size:0.78rem">${t.notes||''}</td>
+            </tr>`;
+        }).join('');
+    </script>
+</body>
+</html>
