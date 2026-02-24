@@ -31,6 +31,12 @@
             --gold: #fbbf24;
             --gold-bg: rgba(251, 191, 36, 0.08);
             --cyan: #22d3ee;
+            /* Animation tokens */
+            --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+            --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+            --duration-fast: 0.3s;
+            --duration-med: 0.6s;
+            --duration-slow: 1.5s;
         }
         
         body {
@@ -44,6 +50,24 @@
         .green { color: var(--green) !important; }
         .red { color: var(--red) !important; }
         .blue { color: var(--blue) !important; }
+
+        /* ===== LOADING OVERLAY ===== */
+        .loading-overlay {
+            position: fixed; inset: 0; z-index: 9999;
+            background: var(--bg);
+            display: flex; align-items: center; justify-content: center;
+            transition: opacity 0.5s var(--ease-out-expo);
+        }
+        .loading-overlay.done { opacity: 0; pointer-events: none; }
+        .loading-shimmer {
+            width: 200px; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; position: relative;
+        }
+        .loading-shimmer::after {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(90deg, transparent, var(--blue), transparent);
+            animation: loadSlide 0.8s ease-in-out infinite;
+        }
+        @keyframes loadSlide { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
         
         /* Background effects */
         .bg-grid {
@@ -53,6 +77,7 @@
                 linear-gradient(90deg, rgba(77,141,255,0.02) 1px, transparent 1px);
             background-size: 80px 80px;
             z-index: 0; pointer-events: none;
+            will-change: transform;
         }
         
         .bg-glow {
@@ -68,6 +93,37 @@
         }
         
         .container { position: relative; z-index: 1; max-width: 1400px; margin: 0 auto; padding: 24px; }
+
+        /* ===== FLOATING GEOMETRIC SHAPES ===== */
+        .geo-shapes { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+        .geo-shape {
+            position: absolute; opacity: 0.04;
+            animation: geoFloat 20s ease-in-out infinite;
+        }
+        .geo-shape:nth-child(1) { top: 10%; left: 8%; animation-delay: 0s; }
+        .geo-shape:nth-child(2) { top: 60%; right: 12%; animation-delay: -5s; }
+        .geo-shape:nth-child(3) { top: 30%; right: 25%; animation-delay: -10s; }
+        .geo-shape:nth-child(4) { bottom: 15%; left: 20%; animation-delay: -15s; }
+        @keyframes geoFloat {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-30px) rotate(5deg); }
+            50% { transform: translateY(-15px) rotate(-3deg); }
+            75% { transform: translateY(-25px) rotate(2deg); }
+        }
+        
+        /* ===== SCROLL REVEAL ===== */
+        .reveal {
+            opacity: 0; transform: translateY(30px);
+            transition: opacity var(--duration-med) var(--ease-out-expo),
+                        transform var(--duration-med) var(--ease-out-expo);
+        }
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+        .stagger-child {
+            opacity: 0; transform: translateY(20px);
+            transition: opacity 0.5s var(--ease-out-expo),
+                        transform 0.5s var(--ease-out-expo);
+        }
+        .stagger-child.visible { opacity: 1; transform: translateY(0); }
         
         /* Animations */
         @keyframes fadeInUp {
@@ -110,7 +166,20 @@
             animation: gradientMove 6s ease infinite;
             margin-bottom: 10px;
         }
+        /* Word-by-word header reveal */
+        .header h1 .word-reveal {
+            display: inline-block;
+            opacity: 0; transform: translateY(15px);
+            animation: wordPop 0.5s var(--ease-spring) forwards;
+        }
+        @keyframes wordPop {
+            to { opacity: 1; transform: translateY(0); }
+        }
         .header p { color: var(--text-dim); font-size: 1.05rem; font-weight: 400; letter-spacing: 0.5px; }
+        .header p .word-reveal {
+            display: inline-block; opacity: 0; transform: translateY(10px);
+            animation: wordPop 0.4s var(--ease-out-expo) forwards;
+        }
         .last-update {
             color: var(--text-dim); font-size: 0.78rem; margin-top: 8px;
             background: var(--card); display: inline-block; padding: 4px 14px;
@@ -138,8 +207,20 @@
         .portfolio-card .label { font-size: 0.78rem; color: var(--text-dim); margin-bottom: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
         .portfolio-card .big-val { font-size: 2.2rem; font-weight: 900; letter-spacing: -1px; }
         .portfolio-card .sub-val { font-size: 0.82rem; color: var(--text-dim); margin-top: 6px; }
-        .portfolio-card { transition: transform 0.3s ease, box-shadow 0.3s ease; }
-        .portfolio-card:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,0,0,0.2); }
+        .portfolio-card { transition: transform var(--duration-fast) var(--ease-spring), box-shadow var(--duration-fast) ease; }
+        .portfolio-card:hover { transform: translateY(-2px) scale(1.01); box-shadow: 0 8px 32px rgba(0,0,0,0.2); }
+        /* Glass reflection sweep */
+        .portfolio-card .glass-sweep {
+            position: absolute; inset: 0; pointer-events: none;
+            background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.03) 45%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.03) 55%, transparent 60%);
+            background-size: 300% 100%; opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .portfolio-card:hover .glass-sweep {
+            opacity: 1;
+            animation: glassSweep 0.8s ease forwards;
+        }
+        @keyframes glassSweep { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
         
         /* Top Stats Bar */
         .top-stats {
@@ -163,9 +244,10 @@
         .month-btn {
             background: var(--card); border: 1px solid var(--border); color: var(--text-dim);
             padding: 10px 20px; border-radius: 12px; cursor: pointer; font-family: inherit;
-            font-size: 0.85rem; font-weight: 600; transition: all 0.3s;
+            font-size: 0.85rem; font-weight: 600; transition: all var(--duration-fast) var(--ease-spring);
         }
-        .month-btn:hover { border-color: var(--blue); color: var(--text); background: var(--card-hover); }
+        .month-btn:hover { border-color: var(--blue); color: var(--text); background: var(--card-hover); transform: scale(1.04); }
+        .month-btn:active { transform: scale(0.97); }
         .month-btn.active {
             background: linear-gradient(135deg, rgba(77,141,255,0.15), rgba(167,139,250,0.1));
             border-color: var(--blue); color: var(--blue);
@@ -189,6 +271,14 @@
             flex-direction: column; align-items: center; justify-content: center;
             font-size: 0.85rem; position: relative; transition: all 0.2s ease;
             border: 1px solid transparent; min-height: 74px; gap: 2px;
+        }
+        /* Calendar wave entrance */
+        .cal-day.cal-anim {
+            opacity: 0; transform: scale(0.8);
+            animation: calCellPop 0.4s var(--ease-spring) forwards;
+        }
+        @keyframes calCellPop {
+            to { opacity: 1; transform: scale(1); }
         }
         .cal-day.empty { opacity: 0; pointer-events: none; }
         .cal-day.has-data { cursor: pointer; }
@@ -241,14 +331,22 @@
         }
         .stat-card {
             background: var(--card); border: 1px solid var(--border); border-radius: 16px;
-            padding: 22px; transition: all 0.3s ease; position: relative; overflow: hidden;
+            padding: 22px; transition: all var(--duration-fast) var(--ease-spring); position: relative; overflow: hidden;
         }
         .stat-card::after {
             content: ''; position: absolute; inset: 0; border-radius: 16px;
             background: linear-gradient(135deg, transparent 60%, rgba(77,141,255,0.03));
             pointer-events: none;
         }
-        .stat-card:hover { transform: translateY(-3px); border-color: rgba(77,141,255,0.3); box-shadow: 0 8px 32px rgba(0,0,0,0.2); }
+        /* Glass sweep on stat cards */
+        .stat-card .glass-sweep {
+            position: absolute; inset: 0; pointer-events: none; border-radius: 16px;
+            background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.03) 45%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.03) 55%, transparent 60%);
+            background-size: 300% 100%; opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .stat-card:hover .glass-sweep { opacity: 1; animation: glassSweep 0.8s ease forwards; }
+        .stat-card:hover { transform: translateY(-3px) scale(1.02); border-color: rgba(77,141,255,0.3); box-shadow: 0 8px 32px rgba(0,0,0,0.2); }
         .stat-card .icon { font-size: 1.5rem; margin-bottom: 8px; }
         .stat-card .label { color: var(--text-dim); font-size: 0.78rem; margin-bottom: 8px; font-weight: 500; }
         .stat-card .value { font-size: 1.7rem; font-weight: 800; }
@@ -256,7 +354,7 @@
         
         /* Win Rate Bar */
         .winrate-bar { margin-top: 10px; height: 5px; background: var(--red-bg); border-radius: 3px; overflow: hidden; }
-        .winrate-fill { height: 100%; background: var(--green); border-radius: 3px; transition: width 1.5s ease; }
+        .winrate-fill { height: 100%; background: var(--green); border-radius: 3px; transition: width 1.5s var(--ease-out-expo); }
         
         /* Streak Section */
         .streak-section {
@@ -276,35 +374,43 @@
         .streak-dot {
             width: 36px; height: 36px; border-radius: 8px;
             display: flex; align-items: center; justify-content: center;
-            font-size: 0.7rem; font-weight: 800; transition: transform 0.2s;
+            font-size: 0.7rem; font-weight: 800; transition: transform 0.2s var(--ease-spring);
         }
-        .streak-dot:hover { transform: scale(1.15); }
+        .streak-dot:hover { transform: scale(1.2); }
         .streak-win { background: var(--green-glow); color: var(--green); border: 1px solid rgba(0,230,138,0.2); }
         .streak-loss { background: var(--red-glow); color: var(--red); border: 1px solid rgba(255,77,106,0.2); }
         
-        /* Rules */
+        /* Rules - Glassmorphism */
         .rules-banner {
             background: linear-gradient(135deg, rgba(251,191,36,0.05), rgba(255,77,106,0.03));
             border: 1px solid rgba(251,191,36,0.15); border-radius: 16px;
             padding: 18px 24px; margin-bottom: 28px;
             display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            position: relative; overflow: hidden;
+        }
+        .rules-banner::before {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(135deg, rgba(251,191,36,0.02), rgba(255,255,255,0.01));
+            pointer-events: none;
         }
         .rules-banner .rule-title { font-weight: 800; color: var(--gold); font-size: 0.9rem; margin-left: 14px; }
         .rules-banner .rule {
             background: rgba(0,0,0,0.3); padding: 6px 14px; border-radius: 8px;
             font-size: 0.75rem; color: var(--text-dim); border: 1px solid var(--border);
-            font-weight: 500;
+            font-weight: 500; transition: transform var(--duration-fast) var(--ease-spring);
         }
+        .rules-banner .rule:hover { transform: scale(1.05); }
         
-        /* Open Positions */
+        /* ===== OPEN POSITIONS - PREMIUM ===== */
         .pos-card {
             border-radius: 18px;
             padding: 24px; position: relative; overflow: hidden;
             border: 1px solid var(--border);
             background: var(--card);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            transition: transform var(--duration-fast) var(--ease-spring), box-shadow var(--duration-fast) ease;
         }
-        .pos-card:hover { transform: translateY(-4px); }
+        .pos-card:hover { transform: translateY(-4px) scale(1.01); }
         .pos-card.pos-profit {
             border-color: rgba(0,230,138,0.25);
             background: linear-gradient(135deg, rgba(0,230,138,0.04) 0%, var(--card) 40%, rgba(34,211,238,0.03) 100%);
@@ -331,11 +437,112 @@
             background: radial-gradient(circle at 80% 20%, rgba(0,230,138,0.03) 0%, transparent 50%);
             opacity: 1;
         }
+
+        /* Animated gradient border for position cards */
+        .pos-card-border-wrap {
+            position: relative; border-radius: 20px; padding: 2px;
+            background: var(--card);
+        }
+        .pos-card-border-wrap.profit {
+            background: linear-gradient(var(--angle, 0deg), var(--green), var(--cyan), var(--blue), var(--green));
+            background-size: 100% 100%;
+            animation: rotateBorder 3s linear infinite;
+        }
+        .pos-card-border-wrap.loss {
+            background: linear-gradient(var(--angle, 0deg), var(--red), #ff7eb3, var(--purple), var(--red));
+            background-size: 100% 100%;
+            animation: rotateBorder 3s linear infinite;
+        }
+        @property --angle {
+            syntax: '<angle>';
+            initial-value: 0deg;
+            inherits: false;
+        }
+        @keyframes rotateBorder { to { --angle: 360deg; } }
+
         @keyframes profitPulse {
             0%, 100% { box-shadow: 0 0 40px rgba(0,230,138,0.06), 0 4px 24px rgba(0,0,0,0.2); }
             50% { box-shadow: 0 0 50px rgba(0,230,138,0.1), 0 4px 24px rgba(0,0,0,0.2); }
         }
         .pos-card.pos-profit { animation: profitPulse 4s ease-in-out infinite; }
+
+        /* PnL pulsing glow */
+        .pos-pnl-big { font-size: 2.2rem; font-weight: 900; letter-spacing: -1px; }
+        .pos-pnl-big.green {
+            text-shadow: 0 0 30px rgba(0,230,138,0.3);
+            animation: pnlGlow 2s ease-in-out infinite;
+        }
+        .pos-pnl-big.red {
+            text-shadow: 0 0 30px rgba(255,77,106,0.3);
+            animation: pnlGlowRed 2s ease-in-out infinite;
+        }
+        @keyframes pnlGlow {
+            0%, 100% { text-shadow: 0 0 20px rgba(0,230,138,0.2); }
+            50% { text-shadow: 0 0 40px rgba(0,230,138,0.5), 0 0 80px rgba(0,230,138,0.2); }
+        }
+        @keyframes pnlGlowRed {
+            0%, 100% { text-shadow: 0 0 20px rgba(255,77,106,0.2); }
+            50% { text-shadow: 0 0 40px rgba(255,77,106,0.5), 0 0 80px rgba(255,77,106,0.2); }
+        }
+
+        /* ROI shimmer sweep */
+        .pos-roi {
+            font-size: 1.15rem; font-weight: 700; margin-top: 4px;
+            position: relative; display: inline-block;
+        }
+        .pos-roi::after {
+            content: ''; position: absolute; inset: -2px -6px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+            background-size: 200% 100%;
+            animation: shimmerSweep 2.5s ease-in-out infinite;
+            border-radius: 4px; pointer-events: none;
+        }
+        @keyframes shimmerSweep {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* Live dot breathing with expanding ring */
+        .live-dot {
+            width: 8px; height: 8px; border-radius: 50%; background: var(--green);
+            display: inline-block; margin-left: 8px;
+            box-shadow: 0 0 8px var(--green);
+            animation: breathe 2s ease-in-out infinite;
+            position: relative;
+        }
+        @keyframes breathe {
+            0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 8px var(--green); }
+            50% { opacity: 0.7; transform: scale(1.2); box-shadow: 0 0 20px var(--green), 0 0 40px rgba(0,230,138,0.2); }
+        }
+        /* Expanding ring around live dot */
+        .live-dot-wrap { position: relative; display: inline-block; }
+        .live-dot-ring {
+            position: absolute; top: 50%; left: 50%; width: 8px; height: 8px;
+            margin-top: -4px; margin-left: -4px;
+            border: 1.5px solid var(--green); border-radius: 50%;
+            animation: ringExpand 2s ease-out infinite;
+            pointer-events: none;
+        }
+        @keyframes ringExpand {
+            0% { transform: scale(1); opacity: 0.8; }
+            100% { transform: scale(4); opacity: 0; }
+        }
+
+        /* Profit particles */
+        .profit-particles {
+            position: absolute; inset: 0; pointer-events: none; overflow: hidden;
+        }
+        .profit-particle {
+            position: absolute; width: 3px; height: 3px;
+            background: var(--green); border-radius: 50; opacity: 0;
+            animation: particleUp 3s ease-out infinite;
+        }
+        @keyframes particleUp {
+            0% { transform: translateY(0) scale(1); opacity: 0; }
+            10% { opacity: 0.6; }
+            100% { transform: translateY(-80px) scale(0); opacity: 0; }
+        }
+
         .pos-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
         .pos-pair { font-size: 1.3rem; font-weight: 800; }
         .pos-badges { display: flex; gap: 6px; }
@@ -348,10 +555,6 @@
         .pos-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 14px; }
         .pos-item .pos-label { font-size: 0.7rem; color: var(--text-dim); margin-bottom: 3px; font-weight: 500; }
         .pos-item .pos-val { font-size: 1rem; font-weight: 700; }
-        .pos-pnl-big { font-size: 2.2rem; font-weight: 900; letter-spacing: -1px; }
-        .pos-pnl-big.green { text-shadow: 0 0 30px rgba(0,230,138,0.3); }
-        .pos-pnl-big.red { text-shadow: 0 0 30px rgba(255,77,106,0.3); }
-        .pos-roi { font-size: 1.15rem; font-weight: 700; margin-top: 4px; }
         .pos-tpsl {
             margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border);
             display: flex; gap: 24px; font-size: 0.85rem; flex-wrap: wrap;
@@ -360,12 +563,6 @@
             background: rgba(255,255,255,0.03); padding: 6px 12px; border-radius: 8px;
             border: 1px solid var(--border);
         }
-        .live-dot {
-            width: 8px; height: 8px; border-radius: 50%; background: var(--green);
-            display: inline-block; margin-left: 8px; box-shadow: 0 0 8px var(--green);
-            animation: blink 1.5s infinite;
-        }
-        @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
         
         /* Trades Table */
         .section-title { font-size: 1.1rem; font-weight: 800; margin-bottom: 16px; letter-spacing: -0.3px; display: flex; align-items: center; gap: 8px; }
@@ -426,6 +623,13 @@
         .equity-svg .dot:hover { r: 6; }
         .equity-svg .axis-label { fill: var(--text-dim); font-size: 10px; font-family: Inter, sans-serif; }
         .equity-svg .zero-line { stroke: var(--text-dim); stroke-width: 0.5; stroke-dasharray: 6 3; opacity: 0.4; }
+        /* Line draw animation */
+        .equity-svg .line-animated {
+            stroke-dasharray: var(--line-length, 2000);
+            stroke-dashoffset: var(--line-length, 2000);
+            animation: drawLine 2s var(--ease-out-expo) forwards;
+        }
+        @keyframes drawLine { to { stroke-dashoffset: 0; } }
 
         /* PnL Bar Chart */
         .bar-chart-wrapper {
@@ -437,6 +641,13 @@
         .bar-svg .bar:hover { opacity: 0.75; }
         .bar-svg .bar-label { fill: var(--text-dim); font-size: 9px; font-family: Inter, sans-serif; text-anchor: middle; }
         .bar-svg .bar-val { font-size: 8px; font-family: Inter, sans-serif; font-weight: 700; text-anchor: middle; }
+        /* Bar grow animation */
+        .bar-svg .bar-animated {
+            transform-origin: bottom center;
+            animation: barGrow 0.8s var(--ease-spring) forwards;
+            transform: scaleY(0);
+        }
+        @keyframes barGrow { to { transform: scaleY(1); } }
 
         /* Discipline Score */
         .discipline-wrapper {
@@ -446,7 +657,7 @@
         .discipline-ring-container { display: inline-block; position: relative; width: 160px; height: 160px; margin: 12px 0; }
         .discipline-ring { transform: rotate(-90deg); }
         .discipline-ring .bg-ring { fill: none; stroke: var(--border); stroke-width: 10; }
-        .discipline-ring .fg-ring { fill: none; stroke-width: 10; stroke-linecap: round; transition: stroke-dashoffset 1.5s ease, stroke 0.5s; }
+        .discipline-ring .fg-ring { fill: none; stroke-width: 10; stroke-linecap: round; transition: stroke-dashoffset 1.5s var(--ease-out-expo), stroke 0.5s; }
         .discipline-score-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 2.4rem; font-weight: 900; }
         .discipline-label { font-size: 0.82rem; color: var(--text-dim); margin-top: 4px; }
         .discipline-factors { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 16px; }
@@ -465,9 +676,9 @@
         }
         .adv-stat {
             background: var(--card); border: 1px solid var(--border); border-radius: 14px;
-            padding: 18px; text-align: center; transition: transform 0.3s, border-color 0.3s;
+            padding: 18px; text-align: center; transition: transform var(--duration-fast) var(--ease-spring), border-color var(--duration-fast);
         }
-        .adv-stat:hover { transform: translateY(-2px); border-color: var(--blue); }
+        .adv-stat:hover { transform: translateY(-2px) scale(1.02); border-color: var(--blue); }
         .adv-stat .adv-label { font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; margin-bottom: 6px; }
         .adv-stat .adv-value { font-size: 1.4rem; font-weight: 800; }
 
@@ -478,7 +689,7 @@
             padding: 24px 28px; margin-bottom: 28px;
         }
         .goal-bar-track { height: 12px; background: rgba(90,107,138,0.1); border-radius: 6px; overflow: hidden; position: relative; margin: 14px 0 8px; }
-        .goal-bar-fill { height: 100%; border-radius: 6px; transition: width 1.5s ease; position: relative; }
+        .goal-bar-fill { height: 100%; border-radius: 6px; transition: width 1.5s var(--ease-out-expo); position: relative; }
         .goal-bar-fill::after { content: ''; position: absolute; right: 0; top: -2px; bottom: -2px; width: 4px; background: white; border-radius: 2px; box-shadow: 0 0 8px rgba(255,255,255,0.5); }
         .goal-info { display: flex; justify-content: space-between; font-size: 0.82rem; }
         .goal-info .current { font-weight: 700; }
@@ -533,61 +744,90 @@
             .stats-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
             .cal-day { min-height: 48px; }
         }
+
+        /* ===== REDUCED MOTION ===== */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+            .reveal { opacity: 1; transform: none; }
+            .stagger-child { opacity: 1; transform: none; }
+            .cal-day.cal-anim { opacity: 1; transform: none; }
+            .loading-overlay { display: none; }
+        }
     </style>
 </head>
 <body>
-    <div class="bg-grid"></div>
+    <!-- Loading overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-shimmer"></div>
+    </div>
+
+    <div class="bg-grid" id="bgGrid"></div>
     <div class="bg-glow"></div>
+
+    <!-- Floating geometric shapes -->
+    <div class="geo-shapes" id="geoShapes">
+        <svg class="geo-shape" width="60" height="60" viewBox="0 0 60 60"><polygon points="30,5 55,50 5,50" fill="none" stroke="rgba(77,141,255,0.5)" stroke-width="1"/></svg>
+        <svg class="geo-shape" width="50" height="50" viewBox="0 0 50 50"><circle cx="25" cy="25" r="20" fill="none" stroke="rgba(167,139,250,0.5)" stroke-width="1"/></svg>
+        <svg class="geo-shape" width="40" height="40" viewBox="0 0 40 40"><rect x="5" y="5" width="30" height="30" rx="4" fill="none" stroke="rgba(0,230,138,0.4)" stroke-width="1" transform="rotate(15 20 20)"/></svg>
+        <svg class="geo-shape" width="55" height="55" viewBox="0 0 55 55"><polygon points="27.5,2 52,20 42,50 13,50 3,20" fill="none" stroke="rgba(255,77,106,0.4)" stroke-width="1"/></svg>
+    </div>
+
     <script>
         for(let i=0;i<10;i++){const p=document.createElement('div');p.className='particle';p.style.left=Math.random()*100+'%';p.style.animationDuration=(18+Math.random()*25)+'s';p.style.animationDelay=Math.random()*12+'s';document.body.appendChild(p);}
     </script>
     
     <div class="container">
         <!-- Header -->
-        <div class="header anim-fade">
-            <h1>📊 Trading Dashboard</h1>
-            <p>Futures PnL Analysis</p>
+        <div class="header reveal" data-delay="0">
+            <h1 id="headerTitle">📊 Trading Dashboard</h1>
+            <p id="headerSub">Futures PnL Analysis</p>
             <div class="last-update" id="lastUpdate"></div>
         </div>
         
         <!-- Portfolio Summary -->
-        <div class="portfolio-summary anim-fade anim-delay-1">
-            <div class="portfolio-card realized">
+        <div class="portfolio-summary reveal" data-delay="100">
+            <div class="portfolio-card realized stagger-child">
+                <div class="glass-sweep"></div>
                 <div class="label">💰 Total Realized PnL</div>
-                <div class="big-val" id="totalRealizedPnl">$0</div>
+                <div class="big-val counter-el" id="totalRealizedPnl" data-prefix="" data-suffix="">$0</div>
                 <div class="sub-val" id="totalRealizedPct"></div>
             </div>
-            <div class="portfolio-card unrealized">
+            <div class="portfolio-card unrealized stagger-child">
+                <div class="glass-sweep"></div>
                 <div class="label">📊 Total Unrealized PnL</div>
-                <div class="big-val" id="totalUnrealizedPnl">$0</div>
+                <div class="big-val counter-el" id="totalUnrealizedPnl" data-prefix="" data-suffix="">$0</div>
                 <div class="sub-val" id="totalUnrealizedSub">From open positions</div>
             </div>
         </div>
         
         <!-- Top Stats -->
-        <div class="top-stats anim-fade anim-delay-2">
-            <div class="top-stat">
+        <div class="top-stats reveal" data-delay="200">
+            <div class="top-stat stagger-child">
                 <div class="label">Today</div>
-                <div class="value" id="todayPnl">$0</div>
+                <div class="value counter-el" id="todayPnl">$0</div>
                 <div class="sub" id="todayPct"></div>
             </div>
-            <div class="top-stat">
+            <div class="top-stat stagger-child">
                 <div class="label">7 Days</div>
-                <div class="value" id="weekPnl">$0</div>
+                <div class="value counter-el" id="weekPnl">$0</div>
                 <div class="sub" id="weekPct"></div>
             </div>
-            <div class="top-stat">
+            <div class="top-stat stagger-child">
                 <div class="label">All Time</div>
-                <div class="value" id="monthPnl">$0</div>
+                <div class="value counter-el" id="monthPnl">$0</div>
                 <div class="sub" id="monthPct"></div>
             </div>
         </div>
         
         <!-- Month Selector -->
-        <div class="month-selector anim-fade anim-delay-2" id="monthSelector"></div>
+        <div class="month-selector reveal" data-delay="200" id="monthSelector"></div>
         
         <!-- Calendar -->
-        <div class="calendar-wrapper anim-fade anim-delay-3">
+        <div class="calendar-wrapper reveal" data-delay="300">
             <div class="calendar-header">
                 <div>SUN</div><div>MON</div><div>TUE</div><div>WED</div><div>THU</div><div>FRI</div><div>SAT</div>
             </div>
@@ -596,19 +836,19 @@
         </div>
         
         <!-- Equity Curve -->
-        <div class="equity-curve-wrapper anim-fade anim-delay-2">
+        <div class="equity-curve-wrapper reveal" data-delay="200">
             <div class="section-title">📈 Equity Curve (All Time)</div>
             <svg class="equity-svg" id="equityCurve" preserveAspectRatio="none"></svg>
         </div>
 
         <!-- Daily PnL Bar Chart -->
-        <div class="bar-chart-wrapper anim-fade anim-delay-3">
+        <div class="bar-chart-wrapper reveal" data-delay="300">
             <div class="section-title">📊 Daily PnL — <span id="barChartMonth"></span></div>
             <svg class="bar-svg" id="barChart" preserveAspectRatio="none"></svg>
         </div>
 
         <!-- Discipline + Goal row -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:0;" class="anim-fade anim-delay-3" id="disciplineGoalRow">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:0;" class="reveal" data-delay="300" id="disciplineGoalRow">
             <!-- Discipline Score -->
             <div class="discipline-wrapper">
                 <div class="section-title" style="justify-content:center;">🛡️ Discipline Score</div>
@@ -631,49 +871,55 @@
         </div>
 
         <!-- Advanced Stats -->
-        <div class="section-title anim-fade anim-delay-3" style="margin-top:28px;">⚡ Advanced Analytics</div>
+        <div class="section-title reveal" data-delay="300" style="margin-top:28px;">⚡ Advanced Analytics</div>
         <div class="section-divider"></div>
-        <div class="adv-stats-grid anim-fade anim-delay-3" id="advStats"></div>
+        <div class="adv-stats-grid reveal" data-delay="300" id="advStats"></div>
 
         <!-- Stats Cards -->
-        <div class="section-title anim-fade anim-delay-3">📈 Monthly Statistics</div>
+        <div class="section-title reveal" data-delay="300">📈 Monthly Statistics</div>
         <div class="section-divider"></div>
-        <div class="stats-grid" id="statsGrid">
-            <div class="stat-card anim-fade anim-delay-3">
+        <div class="stats-grid reveal" data-delay="300" id="statsGrid">
+            <div class="stat-card stagger-child">
+                <div class="glass-sweep"></div>
                 <div class="icon">📊</div>
                 <div class="label">סה"כ ימי מסחר</div>
-                <div class="value blue" id="totalTrades">0</div>
+                <div class="value blue counter-el" id="totalTrades">0</div>
             </div>
-            <div class="stat-card anim-fade anim-delay-3">
+            <div class="stat-card stagger-child">
+                <div class="glass-sweep"></div>
                 <div class="icon">🎯</div>
                 <div class="label">Win Rate</div>
-                <div class="value" id="winRate" style="color:var(--purple)">0%</div>
+                <div class="value counter-el" id="winRate" style="color:var(--purple)">0%</div>
                 <div class="winrate-bar"><div class="winrate-fill" id="winRateBar" style="width:0%"></div></div>
             </div>
-            <div class="stat-card anim-fade anim-delay-4">
+            <div class="stat-card stagger-child">
+                <div class="glass-sweep"></div>
                 <div class="icon">🏆</div>
                 <div class="label">הרווח הגדול</div>
-                <div class="value green" id="bestDay">$0</div>
+                <div class="value green counter-el" id="bestDay">$0</div>
             </div>
-            <div class="stat-card anim-fade anim-delay-4">
+            <div class="stat-card stagger-child">
+                <div class="glass-sweep"></div>
                 <div class="icon">💥</div>
                 <div class="label">ההפסד הגדול</div>
-                <div class="value red" id="worstDay">$0</div>
+                <div class="value red counter-el" id="worstDay">$0</div>
             </div>
-            <div class="stat-card anim-fade anim-delay-5">
+            <div class="stat-card stagger-child">
+                <div class="glass-sweep"></div>
                 <div class="icon">✅</div>
                 <div class="label">ימים ירוקים</div>
-                <div class="value green" id="greenDays">0</div>
+                <div class="value green counter-el" id="greenDays">0</div>
             </div>
-            <div class="stat-card anim-fade anim-delay-5">
+            <div class="stat-card stagger-child">
+                <div class="glass-sweep"></div>
                 <div class="icon">❌</div>
                 <div class="label">ימים אדומים</div>
-                <div class="value red" id="redDays">0</div>
+                <div class="value red counter-el" id="redDays">0</div>
             </div>
         </div>
         
         <!-- Streak -->
-        <div class="streak-section anim-fade anim-delay-4" id="streakSection" style="display:none;">
+        <div class="streak-section reveal" data-delay="400" id="streakSection" style="display:none;">
             <div class="streak-header">
                 <div class="section-title">🔥 רצף ימים אחרונים</div>
                 <div class="streak-counters" id="streakCounters"></div>
@@ -682,24 +928,24 @@
         </div>
         
         <!-- Open Positions -->
-        <div id="openPositionsSection" class="anim-fade anim-delay-4">
-            <div class="section-title">🔴 פוזיציות פתוחות <span class="live-dot"></span></div>
+        <div id="openPositionsSection" class="reveal" data-delay="400">
+            <div class="section-title">🔴 פוזיציות פתוחות <span class="live-dot-wrap"><span class="live-dot"></span><span class="live-dot-ring"></span></span></div>
             <div class="section-divider"></div>
             <div id="openPositions" style="display:flex;flex-direction:column;gap:14px;margin-bottom:28px;"></div>
         </div>
         
         <!-- Rules -->
-        <div class="rules-banner anim-fade anim-delay-5">
+        <div class="rules-banner reveal" data-delay="500">
             <span class="rule-title">⚠️ כללי ברזל</span>
-            <span class="rule">סיכון 1-2% לטרייד</span>
-            <span class="rule">מקסימום $50 הפסד יומי</span>
-            <span class="rule">לוורג' עד x10</span>
-            <span class="rule">R/R מינימלי 1:2</span>
-            <span class="rule">2 הפסדים = עצור!</span>
+            <span class="rule stagger-child">סיכון 1-2% לטרייד</span>
+            <span class="rule stagger-child">מקסימום $50 הפסד יומי</span>
+            <span class="rule stagger-child">לוורג' עד x10</span>
+            <span class="rule stagger-child">R/R מינימלי 1:2</span>
+            <span class="rule stagger-child">2 הפסדים = עצור!</span>
         </div>
         
         <!-- Trades Table -->
-        <div class="anim-fade anim-delay-5">
+        <div class="reveal" data-delay="500">
             <div class="section-title">📋 היסטוריית עסקאות</div>
             <div class="section-divider"></div>
             <div class="trades-wrapper">
@@ -818,6 +1064,120 @@
     
     const INITIAL_ASSETS = 693.33;
     
+    // ==================== ANIMATION ENGINE ====================
+    
+    // Scroll-triggered reveals via IntersectionObserver
+    const revealObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const el = entry.target;
+                const delay = parseInt(el.dataset.delay || '0');
+                setTimeout(() => {
+                    el.classList.add('visible');
+                    // Stagger children
+                    const children = el.querySelectorAll('.stagger-child');
+                    children.forEach((child, i) => {
+                        setTimeout(() => child.classList.add('visible'), i * 100);
+                    });
+                    // Trigger number counters in this section
+                    triggerCounters(el);
+                }, delay);
+                revealObserver.unobserve(el);
+            }
+        });
+    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+    
+    document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+    // Number counter animation with easeOutExpo
+    function easeOutExpo(t) { return t === 1 ? 1 : 1 - Math.pow(2, -10 * t); }
+    
+    function animateCounter(el, target, isCurrency, isPercent, isInteger) {
+        if (el._counted) return;
+        el._counted = true;
+        const duration = 1500;
+        const start = performance.now();
+        const isNeg = target < 0;
+        function update(now) {
+            const elapsed = now - start;
+            const progress = Math.min(elapsed / duration, 1);
+            const eased = easeOutExpo(progress);
+            const current = target * eased;
+            if (isCurrency) {
+                const sign = current > 0 ? '+' : '';
+                el.textContent = sign + '$' + current.toFixed(2);
+            } else if (isPercent) {
+                el.textContent = current.toFixed(1) + '%';
+            } else if (isInteger) {
+                el.textContent = Math.round(current);
+            } else {
+                el.textContent = current.toFixed(2);
+            }
+            if (progress < 1) requestAnimationFrame(update);
+        }
+        requestAnimationFrame(update);
+    }
+
+    function triggerCounters(container) {
+        // We trigger counters after data is set, via a separate call
+    }
+
+    // Header word-by-word reveal
+    function revealWords(el, baseDelay) {
+        const text = el.textContent;
+        const words = text.split(/(\s+)/);
+        el.innerHTML = '';
+        let wordIdx = 0;
+        words.forEach(w => {
+            if (w.trim() === '') {
+                el.appendChild(document.createTextNode(w));
+            } else {
+                const span = document.createElement('span');
+                span.className = 'word-reveal';
+                span.textContent = w;
+                span.style.animationDelay = (baseDelay + wordIdx * 120) + 'ms';
+                el.appendChild(span);
+                wordIdx++;
+            }
+        });
+    }
+
+    // Parallax on scroll
+    let lastScrollY = 0;
+    let ticking = false;
+    function onScroll() {
+        lastScrollY = window.scrollY;
+        if (!ticking) {
+            requestAnimationFrame(() => {
+                // Background grid parallax
+                const grid = document.getElementById('bgGrid');
+                if (grid) grid.style.transform = `translateY(${lastScrollY * 0.15}px)`;
+                // Geo shapes parallax
+                const shapes = document.querySelectorAll('.geo-shape');
+                shapes.forEach((s, i) => {
+                    const speed = 0.03 + i * 0.015;
+                    s.style.transform = `translateY(${-lastScrollY * speed}px)`;
+                });
+                ticking = false;
+            });
+            ticking = true;
+        }
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+
+    // Dynamic shadow on card hover
+    document.addEventListener('mousemove', (e) => {
+        const cards = document.querySelectorAll('.stat-card, .portfolio-card, .pos-card, .adv-stat');
+        cards.forEach(card => {
+            const rect = card.getBoundingClientRect();
+            if (e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom) {
+                const x = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
+                const y = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
+                card.style.boxShadow = `${-x * 8}px ${-y * 8}px 30px rgba(0,0,0,0.25), 0 0 40px rgba(77,141,255,0.04)`;
+            }
+        });
+    });
+
     // ==================== RENDER ====================
     let currentMonth = "2026-02";
     
@@ -833,7 +1193,7 @@
         }).join('');
     }
     
-    function setMonth(m) { currentMonth = m; renderMonthSelector(); renderCalendar(); renderStats(); renderBarChart(); renderDiscipline(); renderGoalTracker(); }
+    function setMonth(m) { currentMonth = m; renderMonthSelector(); renderCalendar(); renderStats(); renderBarChart(); }
     
     function renderCalendar() {
         const grid = document.getElementById('calendarGrid');
@@ -845,7 +1205,8 @@
         const isCurrentMonth = today.getFullYear()===year && today.getMonth()===month-1;
         
         let html = '';
-        for (let i=0; i<firstDay; i++) html += '<div class="cal-day empty"></div>';
+        let cellIdx = 0;
+        for (let i=0; i<firstDay; i++) { html += '<div class="cal-day empty"></div>'; cellIdx++; }
         
         let cumulative = 0;
         const cumData = [];
@@ -856,7 +1217,7 @@
             const isToday = isCurrentMonth && today.getDate()===d;
             if (hasData) { cumulative += pnl; cumData.push({day:d, cum:cumulative}); }
             
-            let cls = 'cal-day';
+            let cls = 'cal-day cal-anim';
             if (hasData) {
                 cls += ' has-data';
                 if (pnl > 0) {
@@ -868,6 +1229,11 @@
                 } else { cls += ' zero'; }
             } else { cls += ' no-data'; }
             if (isToday) cls += ' today';
+            
+            // Wave stagger: row + col based delay
+            const col = cellIdx % 7;
+            const row = Math.floor(cellIdx / 7);
+            const staggerDelay = (row + col) * 30;
             
             let pnlStr = '';
             let tooltipHtml = '';
@@ -882,7 +1248,8 @@
                 pnlStr = '<div class="day-pnl dim">—</div>';
             }
             
-            html += `<div class="${cls}">${tooltipHtml}<div class="day-num">${d}</div>${pnlStr}</div>`;
+            html += `<div class="${cls}" style="animation-delay:${staggerDelay}ms">${tooltipHtml}<div class="day-num">${d}</div>${pnlStr}</div>`;
+            cellIdx++;
         }
         grid.innerHTML = html;
         
@@ -1014,6 +1381,12 @@
         } else {
             document.getElementById('emptyTrades').style.display = 'block';
         }
+
+        // Render advanced features
+        renderEquityCurve(allDays);
+        renderDiscipline(allDays, monthVals);
+        renderGoal(allTime);
+        renderAdvancedStats(allDays, monthVals);
     }
     
     function setStatVal(id, val) {
@@ -1029,10 +1402,20 @@
         container.innerHTML = OPEN_POSITIONS.map(p => {
             const isProfit = p.unrealizedPnl >= 0;
             const unitLabel = p.pair.split('/')[0];
+            const borderClass = isProfit ? 'profit' : 'loss';
+            // Generate particles for profit positions
+            let particlesHtml = '';
+            if (isProfit) {
+                for (let i = 0; i < 6; i++) {
+                    particlesHtml += `<div class="profit-particle" style="left:${10+Math.random()*80}%;bottom:${10+Math.random()*40}%;animation-delay:${Math.random()*3}s;animation-duration:${2+Math.random()*2}s"></div>`;
+                }
+            }
             return `
+            <div class="pos-card-border-wrap ${borderClass}">
             <div class="pos-card ${isProfit?'pos-profit':'pos-loss'}">
+                ${isProfit ? '<div class="profit-particles">' + particlesHtml + '</div>' : ''}
                 <div class="pos-header">
-                    <div><span class="pos-pair">${p.pair}</span><span class="live-dot"></span></div>
+                    <div><span class="pos-pair">${p.pair}</span><span class="live-dot-wrap"><span class="live-dot"></span><span class="live-dot-ring"></span></span></div>
                     <div class="pos-badges">
                         <span class="pos-badge ${p.direction.toLowerCase()}">${p.direction}</span>
                         <span class="pos-badge">${p.mode}</span>
@@ -1061,197 +1444,212 @@
                     <span>🎯 TP: <strong class="green">$${p.tp}</strong></span>
                     <span>🛑 SL: <strong class="red">$${p.sl}</strong></span>
                 </div>
+            </div>
             </div>`;
         }).join('');
     }
-    
-    // ==================== NEW FEATURES ====================
 
-    function renderEquityCurve() {
+    // ==================== EQUITY CURVE ====================
+    function renderEquityCurve(allDays) {
         const svg = document.getElementById('equityCurve');
-        const allDays = [];
-        Object.entries(DAILY_PNL).forEach(([month, days]) => {
-            Object.entries(days).forEach(([day, val]) => {
-                allDays.push({ sort: month+'-'+String(day).padStart(2,'0'), val, label: day+'/'+month.split('-')[1] });
-            });
-        });
-        allDays.sort((a,b) => a.sort.localeCompare(b.sort));
-        if (allDays.length < 2) return;
+        if (!allDays.length) return;
+        const rect = svg.getBoundingClientRect();
+        const W = rect.width || 800, H = rect.height || 200;
+        const pad = { t: 20, r: 20, b: 30, l: 50 };
+        const iW = W - pad.l - pad.r, iH = H - pad.t - pad.b;
 
         let cum = 0;
-        const points = allDays.map(d => { cum += d.val; return { ...d, cum }; });
-        const w = svg.clientWidth || 800, h = svg.clientHeight || 200;
-        const pad = { top: 20, right: 15, bottom: 25, left: 55 };
-        const gw = w - pad.left - pad.right, gh = h - pad.top - pad.bottom;
-        const minY = Math.min(0, ...points.map(p=>p.cum)), maxY = Math.max(0, ...points.map(p=>p.cum));
+        const points = [{ x: 0, y: 0, label: 'Start' }];
+        allDays.forEach((d, i) => {
+            cum += d.val;
+            points.push({ x: i + 1, y: cum, label: d.sort });
+        });
+
+        const minY = Math.min(...points.map(p => p.y));
+        const maxY = Math.max(...points.map(p => p.y));
         const rangeY = maxY - minY || 1;
 
-        const xScale = i => pad.left + (i / (points.length - 1)) * gw;
-        const yScale = v => pad.top + (1 - (v - minY) / rangeY) * gh;
+        const px = (i) => pad.l + (i / (points.length - 1)) * iW;
+        const py = (v) => pad.t + iH - ((v - minY) / rangeY) * iH;
 
-        let svgContent = '';
+        let pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${px(i).toFixed(1)},${py(p.y).toFixed(1)}`).join(' ');
+        let areaD = pathD + ` L${px(points.length - 1).toFixed(1)},${(pad.t + iH).toFixed(1)} L${pad.l},${(pad.t + iH).toFixed(1)} Z`;
+
+        const lineColor = cum >= 0 ? 'var(--green)' : 'var(--red)';
+        const zeroY = py(0);
+
         // Grid lines
-        for (let i = 0; i < 4; i++) {
-            const v = minY + (rangeY * i / 3);
-            const y = yScale(v);
-            svgContent += `<line class="grid-line" x1="${pad.left}" y1="${y}" x2="${w-pad.right}" y2="${y}"/>`;
-            svgContent += `<text class="axis-label" x="${pad.left-8}" y="${y+3}" text-anchor="end">${v>=0?'+':''}$${v.toFixed(0)}</text>`;
+        let gridHtml = '';
+        for (let i = 0; i <= 4; i++) {
+            const yVal = minY + (rangeY / 4) * i;
+            const yPos = py(yVal);
+            gridHtml += `<line class="grid-line" x1="${pad.l}" y1="${yPos}" x2="${W - pad.r}" y2="${yPos}"/>`;
+            gridHtml += `<text class="axis-label" x="${pad.l - 8}" y="${yPos + 3}" text-anchor="end">$${yVal.toFixed(0)}</text>`;
         }
+
         // Zero line
-        const zeroY = yScale(0);
-        svgContent += `<line class="zero-line" x1="${pad.left}" y1="${zeroY}" x2="${w-pad.right}" y2="${zeroY}"/>`;
+        if (minY < 0 && maxY > 0) {
+            gridHtml += `<line class="zero-line" x1="${pad.l}" y1="${zeroY}" x2="${W - pad.r}" y2="${zeroY}"/>`;
+        }
 
-        // Build path
-        const pathPts = points.map((p,i) => `${xScale(i)},${yScale(p.cum)}`);
-        const lineColor = points[points.length-1].cum >= 0 ? 'var(--green)' : 'var(--red)';
-        const areaColor = points[points.length-1].cum >= 0 ? 'var(--green)' : 'var(--red)';
-        svgContent += `<polyline class="line" points="${pathPts.join(' ')}" stroke="${lineColor}"/>`;
-        // Area
-        svgContent += `<polygon class="area" points="${xScale(0)},${yScale(0)} ${pathPts.join(' ')} ${xScale(points.length-1)},${yScale(0)}" fill="${areaColor}"/>`;
         // Dots
-        points.forEach((p,i) => {
-            const color = p.cum >= 0 ? 'var(--green)' : 'var(--red)';
-            svgContent += `<circle class="dot" cx="${xScale(i)}" cy="${yScale(p.cum)}" fill="${color}" stroke="var(--card)"><title>${p.label}: ${p.cum>=0?'+':''}$${p.cum.toFixed(2)}</title></circle>`;
-        });
-        // X labels (first, mid, last)
-        [0, Math.floor(points.length/2), points.length-1].forEach(i => {
-            svgContent += `<text class="axis-label" x="${xScale(i)}" y="${h-4}" text-anchor="middle">${points[i].label}</text>`;
+        let dotsHtml = '';
+        points.forEach((p, i) => {
+            if (i === 0) return;
+            dotsHtml += `<circle class="dot" cx="${px(i)}" cy="${py(p.y)}" fill="${p.y >= 0 ? 'var(--green)' : 'var(--red)'}" stroke="var(--bg)"><title>${p.label}: $${p.y.toFixed(2)}</title></circle>`;
         });
 
-        svg.innerHTML = svgContent;
+        svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+        svg.innerHTML = `
+            ${gridHtml}
+            <path class="area" d="${areaD}" fill="${lineColor}"/>
+            <path class="line line-animated" d="${pathD}" stroke="${lineColor}" style="--line-length:${(points.length * 50)}"/>
+            ${dotsHtml}
+        `;
     }
 
+    // ==================== BAR CHART ====================
     function renderBarChart() {
         const svg = document.getElementById('barChart');
         const data = DAILY_PNL[currentMonth] || {};
-        const entries = Object.entries(data).map(([d,v]) => ({day:parseInt(d),val:v})).sort((a,b)=>a.day-b.day);
-        const names = {"01":"January","02":"February","03":"March","04":"April","05":"May","06":"June","07":"July","08":"August","09":"September","10":"October","11":"November","12":"December"};
-        document.getElementById('barChartMonth').textContent = names[currentMonth.split('-')[1]] || '';
-        if (!entries.length) { svg.innerHTML = '<text x="50%" y="50%" text-anchor="middle" fill="var(--text-dim)" font-size="14">No data</text>'; return; }
+        const entries = Object.entries(data).map(([d, v]) => ({ day: parseInt(d), val: v })).sort((a, b) => a.day - b.day);
+        const monthNames = {"01":"Jan","02":"Feb","03":"Mar","04":"Apr","05":"May","06":"Jun","07":"Jul","08":"Aug","09":"Sep","10":"Oct","11":"Nov","12":"Dec"};
+        document.getElementById('barChartMonth').textContent = monthNames[currentMonth.split('-')[1]] + ' ' + currentMonth.split('-')[0];
 
-        const w = svg.clientWidth || 800, h = svg.clientHeight || 180;
-        const pad = { top: 20, right: 10, bottom: 25, left: 50 };
-        const gw = w - pad.left - pad.right, gh = h - pad.top - pad.bottom;
-        const maxAbs = Math.max(...entries.map(e=>Math.abs(e.val)), 1);
-        const barW = Math.min(Math.floor(gw / entries.length) - 4, 30);
-        const gap = (gw - barW * entries.length) / (entries.length + 1);
-        const zeroY = pad.top + gh / 2;
+        if (!entries.length) { svg.innerHTML = ''; return; }
 
-        let svgContent = `<line class="zero-line" x1="${pad.left}" y1="${zeroY}" x2="${w-pad.right}" y2="${zeroY}" style="opacity:0.6"/>`;
+        const rect = svg.getBoundingClientRect();
+        const W = rect.width || 800, H = rect.height || 180;
+        const pad = { t: 20, r: 10, b: 25, l: 45 };
+        const iW = W - pad.l - pad.r, iH = H - pad.t - pad.b;
+        const maxAbs = Math.max(...entries.map(e => Math.abs(e.val)), 1);
+        const barW = Math.min(iW / entries.length * 0.7, 30);
+        const gap = iW / entries.length;
+        const zeroY = pad.t + iH / 2;
+
+        let html = `<line class="grid-line" x1="${pad.l}" y1="${zeroY}" x2="${W - pad.r}" y2="${zeroY}" style="stroke-dasharray:none;opacity:0.3"/>`;
+
         entries.forEach((e, i) => {
-            const x = pad.left + gap + i * (barW + gap);
-            const barH = (Math.abs(e.val) / maxAbs) * (gh / 2);
+            const x = pad.l + gap * i + (gap - barW) / 2;
+            const barH = (Math.abs(e.val) / maxAbs) * (iH / 2);
             const y = e.val >= 0 ? zeroY - barH : zeroY;
             const color = e.val >= 0 ? 'var(--green)' : 'var(--red)';
-            svgContent += `<rect class="bar" x="${x}" y="${y}" width="${barW}" height="${barH}" fill="${color}"><title>Day ${e.day}: ${e.val>=0?'+':''}$${e.val.toFixed(2)}</title></rect>`;
-            svgContent += `<text class="bar-label" x="${x+barW/2}" y="${h-6}">${e.day}</text>`;
-            if (Math.abs(e.val) > maxAbs * 0.15) {
-                const valY = e.val >= 0 ? y - 4 : y + barH + 10;
-                svgContent += `<text class="bar-val" x="${x+barW/2}" y="${valY}" fill="${color}">${e.val>=0?'+':''}${Math.abs(e.val)>=1000?(e.val/1000).toFixed(1)+'K':e.val.toFixed(0)}</text>`;
-            }
+            const transformOrigin = e.val >= 0 ? `${x + barW / 2}px ${zeroY}px` : `${x + barW / 2}px ${zeroY}px`;
+            html += `<rect class="bar bar-animated" x="${x}" y="${y}" width="${barW}" height="${barH}" fill="${color}" style="animation-delay:${i * 60}ms;transform-origin:${x + barW/2}px ${zeroY}px"><title>Day ${e.day}: ${e.val >= 0 ? '+' : ''}$${e.val.toFixed(2)}</title></rect>`;
+            html += `<text class="bar-label" x="${x + barW / 2}" y="${H - 5}">${e.day}</text>`;
+            const valY = e.val >= 0 ? y - 4 : y + barH + 10;
+            html += `<text class="bar-val" x="${x + barW / 2}" y="${valY}" fill="${color}">${e.val >= 0 ? '+' : ''}${Math.abs(e.val) >= 100 ? '$' + (e.val / 1).toFixed(0) : '$' + e.val.toFixed(0)}</text>`;
         });
-        svg.innerHTML = svgContent;
+
+        svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+        svg.innerHTML = html;
     }
 
-    function renderDiscipline() {
-        const data = DAILY_PNL[currentMonth] || {};
-        const vals = Object.values(data);
-        if (!vals.length) return;
+    // ==================== DISCIPLINE SCORE ====================
+    function renderDiscipline(allDays, monthVals) {
+        const totalDays = monthVals.filter(v => v !== 0).length;
+        const greenDays = monthVals.filter(v => v > 0).length;
+        const worstLoss = monthVals.length ? Math.min(...monthVals) : 0;
+        const winRate = totalDays > 0 ? greenDays / totalDays : 0;
 
         // Factors
-        const daysOver50Loss = vals.filter(v => v < -50).length;
-        const daysOver50Pct = vals.length > 0 ? (1 - daysOver50Loss / vals.length) * 100 : 100;
-        const consecutiveLosses = (() => { let max=0,c=0; vals.forEach(v => { if(v<0){c++;max=Math.max(max,c)}else{c=0} }); return max; })();
-        const stoppedAfter2 = consecutiveLosses <= 2 ? 100 : Math.max(0, 100 - (consecutiveLosses - 2) * 25);
-        const greenRatio = vals.filter(v=>v>0).length / vals.length * 100;
-        const avgWin = vals.filter(v=>v>0).length ? vals.filter(v=>v>0).reduce((s,v)=>s+v,0)/vals.filter(v=>v>0).length : 0;
-        const avgLoss = vals.filter(v=>v<0).length ? Math.abs(vals.filter(v=>v<0).reduce((s,v)=>s+v,0)/vals.filter(v=>v<0).length) : 0;
-        const rrScore = avgLoss > 0 ? Math.min((avgWin / avgLoss) / 2 * 100, 100) : 100;
+        const factors = [];
+        const riskOk = Math.abs(worstLoss) <= 50;
+        factors.push({ label: 'Risk ≤$50/day', ok: riskOk, warn: Math.abs(worstLoss) <= 100 && !riskOk });
+        factors.push({ label: 'Win Rate >40%', ok: winRate > 0.4, warn: winRate > 0.3 && winRate <= 0.4 });
+        const avgLoss = monthVals.filter(v => v < 0).length > 0 ? monthVals.filter(v => v < 0).reduce((a, b) => a + b, 0) / monthVals.filter(v => v < 0).length : 0;
+        const avgWin = monthVals.filter(v => v > 0).length > 0 ? monthVals.filter(v => v > 0).reduce((a, b) => a + b, 0) / monthVals.filter(v => v > 0).length : 0;
+        const rr = avgLoss !== 0 ? Math.abs(avgWin / avgLoss) : 0;
+        factors.push({ label: 'R/R ≥ 1.5', ok: rr >= 1.5, warn: rr >= 1 && rr < 1.5 });
+        factors.push({ label: 'Trading >5 days', ok: totalDays >= 5, warn: totalDays >= 3 && totalDays < 5 });
 
-        const score = Math.round(daysOver50Pct * 0.35 + stoppedAfter2 * 0.3 + rrScore * 0.2 + Math.min(greenRatio * 1.5, 100) * 0.15);
-        const clampedScore = Math.max(0, Math.min(100, score));
-
-        const ring = document.getElementById('disciplineRing');
+        const score = factors.reduce((s, f) => s + (f.ok ? 25 : f.warn ? 12 : 0), 0);
         const circ = 2 * Math.PI * 65;
+        const ring = document.getElementById('disciplineRing');
         ring.style.strokeDasharray = circ;
-        ring.style.strokeDashoffset = circ - (clampedScore / 100) * circ;
-        ring.style.stroke = clampedScore >= 75 ? 'var(--green)' : clampedScore >= 50 ? 'var(--gold)' : 'var(--red)';
+        ring.style.strokeDashoffset = circ - (score / 100) * circ;
+        ring.style.stroke = score >= 75 ? 'var(--green)' : score >= 50 ? 'var(--gold)' : 'var(--red)';
 
-        const scoreEl = document.getElementById('disciplineScore');
-        scoreEl.textContent = clampedScore;
-        scoreEl.style.color = clampedScore >= 75 ? 'var(--green)' : clampedScore >= 50 ? 'var(--gold)' : 'var(--red)';
+        document.getElementById('disciplineScore').textContent = score;
+        document.getElementById('disciplineScore').style.color = score >= 75 ? 'var(--green)' : score >= 50 ? 'var(--gold)' : 'var(--red)';
+        document.getElementById('disciplineLabel').textContent = score >= 75 ? 'Excellent' : score >= 50 ? 'Needs Work' : 'Poor';
 
-        document.getElementById('disciplineLabel').textContent = clampedScore >= 80 ? '🔥 Excellent Discipline!' : clampedScore >= 60 ? '⚡ Decent — Room to Improve' : '⚠️ Needs Work!';
-
-        const factors = [
-            { label: `$50 limit: ${daysOver50Loss} violations`, cls: daysOver50Loss === 0 ? 'factor-ok' : daysOver50Loss <= 2 ? 'factor-warn' : 'factor-bad', icon: daysOver50Loss === 0 ? '✅' : '⚠️' },
-            { label: `Max consec. losses: ${consecutiveLosses}`, cls: consecutiveLosses <= 2 ? 'factor-ok' : consecutiveLosses <= 3 ? 'factor-warn' : 'factor-bad', icon: consecutiveLosses <= 2 ? '✅' : '❌' },
-            { label: `Avg R:R ${avgLoss>0?(avgWin/avgLoss).toFixed(1):'∞'}:1`, cls: avgWin/avgLoss >= 2 ? 'factor-ok' : avgWin/avgLoss >= 1 ? 'factor-warn' : 'factor-bad', icon: avgWin/avgLoss >= 2 ? '✅' : '⚠️' },
-        ];
-        document.getElementById('disciplineFactors').innerHTML = factors.map(f => `<div class="discipline-factor"><span>${f.icon}</span><span class="${f.cls}">${f.label}</span></div>`).join('');
+        document.getElementById('disciplineFactors').innerHTML = factors.map(f => {
+            const cls = f.ok ? 'factor-ok' : f.warn ? 'factor-warn' : 'factor-bad';
+            const icon = f.ok ? '✅' : f.warn ? '⚠️' : '❌';
+            return `<div class="discipline-factor"><span class="${cls}">${icon}</span> ${f.label}</div>`;
+        }).join('');
     }
 
-    function renderAdvancedStats() {
-        const allDays = [];
-        Object.entries(DAILY_PNL).forEach(([month, days]) => {
-            Object.entries(days).forEach(([day, val]) => { allDays.push(val); });
-        });
-        const wins = allDays.filter(v=>v>0), losses = allDays.filter(v=>v<0);
-        const avgWin = wins.length ? wins.reduce((s,v)=>s+v,0)/wins.length : 0;
-        const avgLoss = losses.length ? Math.abs(losses.reduce((s,v)=>s+v,0)/losses.length) : 0;
-        const profitFactor = avgLoss > 0 && losses.length > 0 ? (wins.reduce((s,v)=>s+v,0)) / Math.abs(losses.reduce((s,v)=>s+v,0)) : 0;
-
-        // Max drawdown
-        let peak = 0, cum = 0, maxDD = 0;
-        allDays.forEach(v => { cum += v; peak = Math.max(peak, cum); maxDD = Math.min(maxDD, cum - peak); });
-
-        // Expectancy
-        const wr = allDays.length ? wins.length / allDays.length : 0;
-        const expectancy = wr * avgWin - (1 - wr) * avgLoss;
-
-        const stats = [
-            { label: 'Avg Win', value: '+$'+avgWin.toFixed(2), color: 'var(--green)' },
-            { label: 'Avg Loss', value: '-$'+avgLoss.toFixed(2), color: 'var(--red)' },
-            { label: 'Profit Factor', value: profitFactor.toFixed(2), color: profitFactor >= 1 ? 'var(--green)' : 'var(--red)' },
-            { label: 'Max Drawdown', value: '$'+maxDD.toFixed(2), color: 'var(--red)' },
-            { label: 'Expectancy', value: (expectancy>=0?'+':'')+'$'+expectancy.toFixed(2), color: expectancy >= 0 ? 'var(--green)' : 'var(--red)' },
-            { label: 'Total Trades', value: allDays.length, color: 'var(--blue)' },
-        ];
-        document.getElementById('advStats').innerHTML = stats.map(s => `<div class="adv-stat"><div class="adv-label">${s.label}</div><div class="adv-value" style="color:${s.color}">${s.value}</div></div>`).join('');
-    }
-
-    function renderGoalTracker() {
-        const MONTHLY_GOAL = 500; // $500 monthly goal
-        const data = DAILY_PNL[currentMonth] || {};
-        const monthPnl = Object.values(data).reduce((s,v)=>s+v, 0);
-        const pct = Math.max(0, Math.min((monthPnl / MONTHLY_GOAL) * 100, 100));
-        const color = monthPnl >= MONTHLY_GOAL ? 'var(--green)' : monthPnl >= 0 ? 'var(--blue)' : 'var(--red)';
-        const milestones = [100, 250, 500].map(m => ({val:m, reached: monthPnl >= m}));
+    // ==================== GOAL TRACKER ====================
+    function renderGoal(allTimePnl) {
+        const monthlyGoal = 500;
+        const monthData = DAILY_PNL[currentMonth] || {};
+        const monthPnl = Object.values(monthData).reduce((a, b) => a + b, 0);
+        const pct = Math.max(0, Math.min(100, (monthPnl / monthlyGoal) * 100));
+        const color = monthPnl >= 0 ? 'var(--green)' : 'var(--red)';
+        const milestones = [100, 250, 500];
 
         document.getElementById('goalContent').innerHTML = `
-            <div style="font-size:0.85rem;color:var(--text-dim);margin-bottom:4px;">Target: <strong style="color:var(--text)">+$${MONTHLY_GOAL}</strong> this month</div>
-            <div class="goal-bar-track"><div class="goal-bar-fill" style="width:${monthPnl>0?pct:0}%;background:${color}"></div></div>
+            <div style="font-size:0.85rem;color:var(--text-dim)">Target: <strong style="color:var(--text)">+$${monthlyGoal}</strong> this month</div>
+            <div class="goal-bar-track">
+                <div class="goal-bar-fill" style="width:${Math.max(pct, 2)}%;background:${monthPnl >= 0 ? 'linear-gradient(90deg, var(--blue), var(--green))' : 'linear-gradient(90deg, var(--red), #ff7eb3)'}"></div>
+            </div>
             <div class="goal-info">
-                <span class="current" style="color:${color}">${monthPnl>=0?'+':''}$${monthPnl.toFixed(2)}</span>
-                <span style="color:var(--text-dim)">${pct.toFixed(0)}% of goal</span>
+                <span class="current" style="color:${color}">${monthPnl >= 0 ? '+' : ''}$${monthPnl.toFixed(2)}</span>
+                <span>$${monthlyGoal}</span>
             </div>
             <div class="goal-milestones">
-                ${milestones.map(m=>`<div class="goal-milestone ${m.reached?'reached':''}">$${m.val} ${m.reached?'✅':'⬜'}</div>`).join('')}
+                ${milestones.map(m => `<div class="goal-milestone ${monthPnl >= m ? 'reached' : ''}">${monthPnl >= m ? '✅' : '🔒'} $${m}</div>`).join('')}
             </div>
         `;
+    }
+
+    // ==================== ADVANCED STATS ====================
+    function renderAdvancedStats(allDays, monthVals) {
+        const wins = monthVals.filter(v => v > 0);
+        const losses = monthVals.filter(v => v < 0);
+        const avgWin = wins.length ? (wins.reduce((a, b) => a + b, 0) / wins.length) : 0;
+        const avgLoss = losses.length ? (losses.reduce((a, b) => a + b, 0) / losses.length) : 0;
+        const profitFactor = Math.abs(avgLoss) > 0 ? (wins.reduce((a, b) => a + b, 0)) / Math.abs(losses.reduce((a, b) => a + b, 0)) : 0;
+        const sharpe = monthVals.length > 1 ? (monthVals.reduce((a, b) => a + b, 0) / monthVals.length) / (Math.sqrt(monthVals.reduce((s, v) => s + Math.pow(v - monthVals.reduce((a, b) => a + b, 0) / monthVals.length, 2), 0) / monthVals.length) || 1) : 0;
+
+        const stats = [
+            { label: 'Avg Win', value: '+$' + avgWin.toFixed(2), color: 'var(--green)' },
+            { label: 'Avg Loss', value: '$' + avgLoss.toFixed(2), color: 'var(--red)' },
+            { label: 'Profit Factor', value: profitFactor.toFixed(2), color: profitFactor >= 1 ? 'var(--green)' : 'var(--red)' },
+            { label: 'Risk/Reward', value: (Math.abs(avgLoss) > 0 ? (avgWin / Math.abs(avgLoss)).toFixed(2) : '0') + ':1', color: 'var(--cyan)' },
+            { label: 'Sharpe Ratio', value: sharpe.toFixed(2), color: sharpe >= 0 ? 'var(--green)' : 'var(--red)' },
+            { label: 'Max Drawdown', value: '$' + Math.min(...monthVals, 0).toFixed(2), color: 'var(--red)' },
+        ];
+
+        document.getElementById('advStats').innerHTML = stats.map(s =>
+            `<div class="adv-stat stagger-child"><div class="adv-label">${s.label}</div><div class="adv-value" style="color:${s.color}">${s.value}</div></div>`
+        ).join('');
+    }
+
+    // ==================== LOADING SEQUENCE ====================
+    function startLoadingSequence() {
+        // Remove loading overlay after brief delay
+        setTimeout(() => {
+            document.getElementById('loadingOverlay').classList.add('done');
+            setTimeout(() => document.getElementById('loadingOverlay').remove(), 500);
+        }, 400);
+
+        // Header word reveal
+        setTimeout(() => {
+            revealWords(document.getElementById('headerTitle'), 100);
+            revealWords(document.getElementById('headerSub'), 500);
+        }, 200);
     }
 
     // Init
     renderMonthSelector();
     renderCalendar();
     renderStats();
-    renderOpenPositions();
-    renderEquityCurve();
     renderBarChart();
-    renderDiscipline();
-    renderAdvancedStats();
-    renderGoalTracker();
+    renderOpenPositions();
+    startLoadingSequence();
     </script>
 </body>
 </html>
-<!-- cache-bust: 1771956200 -->

@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendar — TradingHub</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <div class="bg-glow"></div>
+
+    <div class="container page-content">
+        <div class="page-header">
+            <h1>📅 PnL Calendar</h1>
+            <p>Daily performance & analytics</p>
+        </div>
+
+        <!-- Month Selector -->
+        <div class="month-selector anim-fade anim-delay-1" id="monthSelector"></div>
+
+        <!-- Calendar -->
+        <div class="calendar-wrapper anim-fade anim-delay-2">
+            <div class="calendar-header">
+                <div>SUN</div><div>MON</div><div>TUE</div><div>WED</div><div>THU</div><div>FRI</div><div>SAT</div>
+            </div>
+            <div class="calendar-grid" id="calendarGrid"></div>
+            <div class="cumulative-bar" id="cumulativeBar"></div>
+        </div>
+
+        <!-- Monthly Comparison -->
+        <div class="anim-fade anim-delay-2" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:28px" id="monthCompare"></div>
+
+        <!-- Best/Worst Days -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:28px" class="anim-fade anim-delay-3">
+            <div class="card" style="border-color:rgba(0,230,138,0.2)">
+                <div class="section-title" style="margin-bottom:12px">🏆 Best Day</div>
+                <div id="bestDay" style="font-size:2rem;font-weight:900;color:var(--green)">$0</div>
+                <div id="bestDayDate" style="color:var(--text-dim);font-size:0.82rem;margin-top:4px"></div>
+            </div>
+            <div class="card" style="border-color:rgba(255,77,106,0.2)">
+                <div class="section-title" style="margin-bottom:12px">💥 Worst Day</div>
+                <div id="worstDay" style="font-size:2rem;font-weight:900;color:var(--red)">$0</div>
+                <div id="worstDayDate" style="color:var(--text-dim);font-size:0.82rem;margin-top:4px"></div>
+            </div>
+        </div>
+
+        <!-- Cumulative PnL Chart -->
+        <div class="card anim-fade anim-delay-3" style="margin-bottom:28px;overflow:hidden">
+            <div class="section-title">📈 Cumulative PnL (All Time)</div>
+            <svg class="equity-svg" id="equityCurve" preserveAspectRatio="none"></svg>
+        </div>
+
+        <!-- Daily PnL Bar Chart -->
+        <div class="card anim-fade anim-delay-4" style="margin-bottom:28px;overflow:hidden">
+            <div class="section-title">📊 Daily PnL — <span id="barChartMonth"></span></div>
+            <svg class="bar-svg" id="barChart" preserveAspectRatio="none"></svg>
+        </div>
+
+        <div class="footer">TradingHub &copy; 2026</div>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="nav.js"></script>
+    <script>
+        renderNav('calendar');
+        initParticles();
+
+        let currentMonth = "2026-02";
+
+        function renderMonthSelector() {
+            const el = document.getElementById('monthSelector');
+            el.innerHTML = Object.keys(DAILY_PNL).sort().map(m => {
+                const mm = m.split('-')[1];
+                return `<button class="month-btn ${m===currentMonth?'active':''}" onclick="setMonth('${m}')">${getMonthName(mm)} ${m.split('-')[0]}</button>`;
+            }).join('');
+        }
+
+        function setMonth(m) { currentMonth = m; renderMonthSelector(); renderCalendar(); renderBarChart(); renderMonthCompare(); }
+
+        function renderCalendar() {
+            const grid = document.getElementById('calendarGrid');
+            const [year, month] = currentMonth.split('-').map(Number);
+            const firstDay = new Date(year, month-1, 1).getDay();
+            const daysInMonth = new Date(year, month, 0).getDate();
+            const data = DAILY_PNL[currentMonth] || {};
+            const today = new Date();
+            const isCurrentMonth = today.getFullYear()===year && today.getMonth()===month-1;
+
+            let html = '';
+            for (let i=0; i<firstDay; i++) html += '<div class="cal-day empty"></div>';
+
+            let cumulative = 0;
+            for (let d=1; d<=daysInMonth; d++) {
+                const pnl = data[d];
+                const hasData = pnl !== undefined;
+                const isToday = isCurrentMonth && today.getDate()===d;
+                if (hasData) cumulative += pnl;
+
+                let cls = 'cal-day';
+                if (hasData) {
+                    cls += ' has-data';
+                    if (pnl > 0) cls += ' positive' + (Math.abs(pnl)>200?' intensity-3':Math.abs(pnl)>50?' intensity-2':' intensity-1');
+                    else if (pnl < 0) cls += ' negative' + (Math.abs(pnl)>200?' intensity-3':Math.abs(pnl)>50?' intensity-2':' intensity-1');
+                    else cls += ' zero';
+                } else cls += ' no-data';
+                if (isToday) cls += ' today';
+
+                let pnlStr = hasData
+                    ? `<div class="day-pnl ${pnl>0?'green':pnl<0?'red':'dim'}">${Math.abs(pnl)>=1000?(pnl>0?'+':'')+'$'+(pnl/1000).toFixed(1)+'K':formatPnl(pnl)}</div>`
+                    : '<div class="day-pnl dim">—</div>';
+                let tooltip = hasData ? `<div class="tooltip"><strong>${d}/${String(month).padStart(2,'0')}/${year}</strong><br>PnL: <span style="color:${pnl>=0?'var(--green)':'var(--red)'};font-weight:700">${formatPnl(pnl)}</span><br>Cumulative: $${cumulative.toFixed(2)}</div>` : '';
+
+                html += `<div class="${cls}">${tooltip}<div class="day-num">${d}</div>${pnlStr}</div>`;
+            }
+            grid.innerHTML = html;
+
+            // Cumulative bar
+            const cumBar = document.getElementById('cumulativeBar');
+            const monthTotal = cumulative;
+            const color = monthTotal >= 0 ? 'var(--green)' : 'var(--red)';
+            const allVals = Object.values(data);
+            const maxAbs = Math.max(...allVals.map(v => Math.abs(v)), 1);
+            const pct = Math.min(Math.abs(monthTotal) / (maxAbs * allVals.length) * 100 + 30, 100);
+            cumBar.innerHTML = `
+                <div class="cum-label">Monthly Cumulative PnL</div>
+                <div class="cum-track"><div class="cum-fill" style="width:${pct}%;background:${color}"></div></div>
+                <div class="cum-values"><span>Start: $0</span><span style="color:${color};font-weight:700">End: ${formatPnl(monthTotal)}</span></div>
+            `;
+        }
+
+        function renderEquityCurve() {
+            const svg = document.getElementById('equityCurve');
+            const allDays = getAllDaysSorted();
+            if (allDays.length < 2) return;
+            let cum = 0;
+            const points = allDays.map(d => { cum += d.val; return { ...d, cum }; });
+            const w = svg.clientWidth || 800, h = svg.clientHeight || 200;
+            const pad = { top: 20, right: 15, bottom: 25, left: 55 };
+            const gw = w-pad.left-pad.right, gh = h-pad.top-pad.bottom;
+            const minY = Math.min(0, ...points.map(p=>p.cum)), maxY = Math.max(0, ...points.map(p=>p.cum));
+            const rangeY = maxY - minY || 1;
+            const xScale = i => pad.left + (i/(points.length-1))*gw;
+            const yScale = v => pad.top + (1-(v-minY)/rangeY)*gh;
+
+            let s = '';
+            for (let i=0;i<4;i++) {
+                const v = minY + (rangeY*i/3); const y = yScale(v);
+                s += `<line class="grid-line" x1="${pad.left}" y1="${y}" x2="${w-pad.right}" y2="${y}"/>`;
+                s += `<text class="axis-label" x="${pad.left-8}" y="${y+3}" text-anchor="end">${formatPnl(v).replace(/\.\d+/,'')}</text>`;
+            }
+            s += `<line class="zero-line" x1="${pad.left}" y1="${yScale(0)}" x2="${w-pad.right}" y2="${yScale(0)}"/>`;
+            const pathPts = points.map((p,i) => `${xScale(i)},${yScale(p.cum)}`);
+            const lineColor = points[points.length-1].cum >= 0 ? 'var(--green)' : 'var(--red)';
+            s += `<polyline class="line" points="${pathPts.join(' ')}" stroke="${lineColor}"/>`;
+            s += `<polygon class="area" points="${xScale(0)},${yScale(0)} ${pathPts.join(' ')} ${xScale(points.length-1)},${yScale(0)}" fill="${lineColor}"/>`;
+            points.forEach((p,i) => {
+                s += `<circle class="dot" cx="${xScale(i)}" cy="${yScale(p.cum)}" fill="${p.cum>=0?'var(--green)':'var(--red)'}" stroke="var(--card)"><title>${p.label}: ${formatPnl(p.cum)}</title></circle>`;
+            });
+            [0, Math.floor(points.length/2), points.length-1].forEach(i => {
+                s += `<text class="axis-label" x="${xScale(i)}" y="${h-4}" text-anchor="middle">${points[i].label}</text>`;
+            });
+            svg.innerHTML = s;
+        }
+
+        function renderBarChart() {
+            const svg = document.getElementById('barChart');
+            const data = DAILY_PNL[currentMonth] || {};
+            const entries = Object.entries(data).map(([d,v])=>({day:parseInt(d),val:v})).sort((a,b)=>a.day-b.day);
+            document.getElementById('barChartMonth').textContent = getMonthName(currentMonth.split('-')[1]);
+            if (!entries.length) { svg.innerHTML = '<text x="50%" y="50%" text-anchor="middle" fill="var(--text-dim)" font-size="14">No data</text>'; return; }
+            const w = svg.clientWidth||800, h = svg.clientHeight||180;
+            const pad = {top:20,right:10,bottom:25,left:50};
+            const gw = w-pad.left-pad.right, gh = h-pad.top-pad.bottom;
+            const maxAbs = Math.max(...entries.map(e=>Math.abs(e.val)),1);
+            const barW = Math.min(Math.floor(gw/entries.length)-4, 30);
+            const gap = (gw-barW*entries.length)/(entries.length+1);
+            const zeroY = pad.top+gh/2;
+            let s = `<line class="zero-line" x1="${pad.left}" y1="${zeroY}" x2="${w-pad.right}" y2="${zeroY}" style="opacity:0.6"/>`;
+            entries.forEach((e,i) => {
+                const x = pad.left+gap+i*(barW+gap);
+                const barH = (Math.abs(e.val)/maxAbs)*(gh/2);
+                const y = e.val >= 0 ? zeroY-barH : zeroY;
+                const color = e.val >= 0 ? 'var(--green)' : 'var(--red)';
+                s += `<rect class="bar" x="${x}" y="${y}" width="${barW}" height="${barH}" fill="${color}"><title>Day ${e.day}: ${formatPnl(e.val)}</title></rect>`;
+                s += `<text class="bar-label" x="${x+barW/2}" y="${h-6}">${e.day}</text>`;
+                if (Math.abs(e.val)>maxAbs*0.15) {
+                    const valY = e.val>=0 ? y-4 : y+barH+10;
+                    s += `<text class="bar-val" x="${x+barW/2}" y="${valY}" fill="${color}">${Math.abs(e.val)>=1000?(e.val/1000).toFixed(1)+'K':e.val.toFixed(0)}</text>`;
+                }
+            });
+            svg.innerHTML = s;
+        }
+
+        function renderMonthCompare() {
+            const el = document.getElementById('monthCompare');
+            el.innerHTML = Object.keys(DAILY_PNL).sort().map(m => {
+                const vals = Object.values(DAILY_PNL[m]);
+                const total = vals.reduce((s,v)=>s+v,0);
+                const wins = vals.filter(v=>v>0).length;
+                const days = vals.length;
+                const color = total >= 0 ? 'var(--green)' : 'var(--red)';
+                return `<div class="card" style="${m===currentMonth?'border-color:var(--blue)':''}">
+                    <div style="font-size:0.78rem;color:var(--text-dim);font-weight:600;margin-bottom:8px">${getMonthName(m.split('-')[1])} ${m.split('-')[0]}</div>
+                    <div style="font-size:1.8rem;font-weight:900;color:${color}">${formatPnl(total)}</div>
+                    <div style="font-size:0.78rem;color:var(--text-dim);margin-top:6px">${days} days · ${wins}W/${days-wins}L · ${days>0?(wins/days*100).toFixed(0):'0'}% WR</div>
+                </div>`;
+            }).join('');
+        }
+
+        // Best/worst days
+        const allDays = getAllDaysSorted();
+        const bestDay = allDays.reduce((a,b) => a.val > b.val ? a : b);
+        const worstDay = allDays.reduce((a,b) => a.val < b.val ? a : b);
+        document.getElementById('bestDay').textContent = formatPnl(bestDay.val);
+        document.getElementById('bestDayDate').textContent = `${bestDay.day}/${bestDay.month.split('-')[1]}/${bestDay.month.split('-')[0]}`;
+        document.getElementById('worstDay').textContent = formatPnl(worstDay.val);
+        document.getElementById('worstDayDate').textContent = `${worstDay.day}/${worstDay.month.split('-')[1]}/${worstDay.month.split('-')[0]}`;
+
+        renderMonthSelector();
+        renderCalendar();
+        renderEquityCurve();
+        renderBarChart();
+        renderMonthCompare();
+    </script>
+</body>
+</html>

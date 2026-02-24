@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Positions — TradingHub</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <div class="bg-glow"></div>
+
+    <div class="container page-content">
+        <div class="page-header">
+            <h1>📊 Open Positions</h1>
+            <p>Live positions & closed trades</p>
+        </div>
+
+        <!-- PnL Summary -->
+        <div class="portfolio-summary anim-fade anim-delay-1">
+            <div class="portfolio-card realized">
+                <div class="label">💰 Realized PnL (positions)</div>
+                <div class="big-val" id="realizedPnl">$0</div>
+            </div>
+            <div class="portfolio-card unrealized">
+                <div class="label">📊 Unrealized PnL</div>
+                <div class="big-val" id="unrealizedPnl">$0</div>
+            </div>
+        </div>
+
+        <!-- Open Positions -->
+        <div class="anim-fade anim-delay-2">
+            <div class="section-title">🔴 Open Positions <span class="live-dot"></span></div>
+            <div class="section-divider"></div>
+            <div id="openPositions" style="display:flex;flex-direction:column;gap:14px;margin-bottom:28px;"></div>
+        </div>
+
+        <!-- Closed Positions Log -->
+        <div class="anim-fade anim-delay-3">
+            <div class="section-title">📋 Position History (Daily PnL)</div>
+            <div class="section-divider"></div>
+            <div class="trades-wrapper">
+                <table class="trades-table">
+                    <thead>
+                        <tr><th>#</th><th>Date</th><th>Direction</th><th>Result</th></tr>
+                    </thead>
+                    <tbody id="historyBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="footer">TradingHub &copy; 2026</div>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="nav.js"></script>
+    <script>
+        renderNav('positions');
+        initParticles();
+
+        const totalRealized = OPEN_POSITIONS.reduce((s,p) => s+p.realizedPnl, 0);
+        const totalUnrealized = OPEN_POSITIONS.reduce((s,p) => s+p.unrealizedPnl, 0);
+
+        function setVal(id, val) {
+            const el = document.getElementById(id);
+            el.textContent = formatPnl(val);
+            el.style.color = pnlColor(val);
+        }
+        setVal('realizedPnl', totalRealized);
+        setVal('unrealizedPnl', totalUnrealized);
+
+        // Full position cards
+        document.getElementById('openPositions').innerHTML = OPEN_POSITIONS.map(p => {
+            const isProfit = p.unrealizedPnl >= 0;
+            const unit = p.pair.split('/')[0];
+            return `<div class="pos-card ${isProfit?'pos-profit':'pos-loss'}">
+                <div class="pos-header">
+                    <div><span class="pos-pair">${p.pair}</span><span class="live-dot"></span></div>
+                    <div class="pos-badges">
+                        <span class="pos-badge ${p.direction.toLowerCase()}">${p.direction}</span>
+                        <span class="pos-badge">${p.mode}</span>
+                        <span class="pos-badge">${p.leverage}</span>
+                    </div>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:18px">
+                    <div>
+                        <div style="font-size:0.72rem;color:var(--text-dim)">Unrealized PnL</div>
+                        <div class="pos-pnl-big ${isProfit?'green':'red'}">${formatPnl(p.unrealizedPnl)}</div>
+                    </div>
+                    <div style="text-align:right">
+                        <div style="font-size:0.72rem;color:var(--text-dim)">ROI</div>
+                        <div class="pos-roi ${isProfit?'green':'red'}">${isProfit?'+':''}${p.roi}%</div>
+                    </div>
+                </div>
+                <div class="pos-grid">
+                    <div class="pos-item"><div class="pos-label">Entry Price</div><div class="pos-val">$${p.entry}</div></div>
+                    <div class="pos-item"><div class="pos-label">Mark Price</div><div class="pos-val">$${p.markPrice}</div></div>
+                    <div class="pos-item"><div class="pos-label">Size</div><div class="pos-val">${p.size.toLocaleString()} ${unit}</div></div>
+                    <div class="pos-item"><div class="pos-label">Margin</div><div class="pos-val">$${p.margin.toFixed(2)}</div></div>
+                    <div class="pos-item"><div class="pos-label">Liq. Price</div><div class="pos-val red">$${p.liqPrice}</div></div>
+                    <div class="pos-item"><div class="pos-label">Realized PnL</div><div class="pos-val green">+$${p.realizedPnl.toFixed(2)}</div></div>
+                </div>
+                <div class="pos-tpsl">
+                    <span>🎯 TP: <strong class="green">$${p.tp}</strong></span>
+                    <span>🛑 SL: <strong class="red">$${p.sl}</strong></span>
+                </div>
+            </div>`;
+        }).join('');
+
+        // History
+        const allDays = getAllDaysSorted();
+        document.getElementById('historyBody').innerHTML = allDays.slice().reverse().map((d, i) => {
+            const dirClass = d.val >= 0 ? 'badge-long' : 'badge-short';
+            return `<tr>
+                <td style="color:var(--text-dim)">${allDays.length - i}</td>
+                <td>${d.day}/${d.month.split('-')[1]}/${d.month.split('-')[0]}</td>
+                <td><span class="badge ${dirClass}">${d.val >= 0 ? '📈 LONG' : '📉 SHORT'}</span></td>
+                <td style="color:${pnlColor(d.val)};font-weight:800">${formatPnl(d.val)}</td>
+            </tr>`;
+        }).join('');
+    </script>
+</body>
+</html>
