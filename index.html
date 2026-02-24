@@ -642,24 +642,8 @@
     ];
     
     // Generate TRADES from DAILY_PNL
+    // Individual trades - only real trades sent by Matan
     const TRADES = [];
-    Object.entries(DAILY_PNL).forEach(([monthKey, days]) => {
-        const [y, m] = monthKey.split('-');
-        Object.entries(days).forEach(([day, pnl]) => {
-            TRADES.push({
-                date: `${String(day).padStart(2,'0')}/${m}`,
-                pair: "Mixed",
-                dir: pnl >= 0 ? "LONG" : "SHORT",
-                entry: "-",
-                exit: "-",
-                lev: "-",
-                result: pnl,
-                notes: "Daily PnL",
-                _sort: `${monthKey}-${String(day).padStart(2,'0')}`
-            });
-        });
-    });
-    TRADES.sort((a, b) => a._sort.localeCompare(b._sort));
     
     const INITIAL_ASSETS = 693.33;
     
