@@ -28,12 +28,6 @@ const OPEN_POSITIONS = [
         entry: 0.5235, markPrice: 0.5412, size: 5895.6, margin: 156.19,
         unrealizedPnl: 102.72, roi: 66.55, tp: 0.6533, sl: 0.5296,
         liqPrice: 0.3929, realizedPnl: 36.57
-    },
-    {
-        pair: "SOL/USDT", direction: "LONG", leverage: "60X", mode: "Cross",
-        entry: 76.70, markPrice: 78.22, size: 60.00, margin: 79.47,
-        unrealizedPnl: 88.95, roi: 115.96, tp: 80.97, sl: 76.74,
-        liqPrice: 63.92, realizedPnl: 171.39
     }
 ];
 
