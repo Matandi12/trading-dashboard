@@ -22,17 +22,30 @@ const DAILY_PNL = {
     }
 };
 
-const OPEN_POSITIONS = [
-    {
-        pair: "CYBER/USDT", direction: "LONG", leverage: "20X", mode: "Cross",
-        entry: 0.5235, markPrice: 0.5412, size: 5895.6, margin: 156.19,
-        unrealizedPnl: 102.72, roi: 66.55, tp: 0.6533, sl: 0.5296,
-        liqPrice: 0.3929, realizedPnl: 36.57
-    }
-];
+const OPEN_POSITIONS = [];
 
 // ==================== DETAILED TRADE LOG ====================
 const DETAILED_TRADES = [
+    {
+        id: 2,
+        pair: "CYBER/USDT",
+        direction: "LONG",
+        leverage: "20X",
+        mode: "Cross",
+        entry: 0.5235,
+        exit: 0.5396,
+        size: 7860.8,
+        sizeUnit: "CYBER",
+        pnl: 127.73,
+        roi: 62.07,
+        tp: null,
+        sl: null,
+        openTime: "2026-02-24 11:47:26",
+        closeTime: "2026-02-25 02:00:09",
+        duration: "14h 12m",
+        status: "TP HIT",
+        notes: "Clean long. Both CYBER and SOL closed same day."
+    },
     {
         id: 1,
         pair: "SOL/USDT",
