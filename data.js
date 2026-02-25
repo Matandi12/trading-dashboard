@@ -18,7 +18,7 @@ const DAILY_PNL = {
     "2026-02": {
         5: -46.56, 9: 1.75, 10: -0.92, 11: 7.21, 12: -1.29,
         13: -98.37, 14: -6.44, 18: -116.05, 19: 57.97, 20: -19.81,
-        21: 188.24, 22: 46.89, 23: -465.97, 24: 221.69
+        21: 188.24, 22: 46.89, 23: -465.97, 24: 221.69, 25: -1070.86
     }
 };
 
@@ -26,6 +26,46 @@ const OPEN_POSITIONS = [];
 
 // ==================== DETAILED TRADE LOG ====================
 const DETAILED_TRADES = [
+    {
+        id: 4,
+        pair: "DOGE/USDT",
+        direction: "SHORT",
+        leverage: "10X",
+        mode: "Cross",
+        entry: 0.1016,
+        exit: null,
+        size: 0,
+        sizeUnit: "DOGE",
+        pnl: 0,
+        roi: 0,
+        tp: 0.0985,
+        sl: 0.1046,
+        openTime: "2026-02-25 16:01:00",
+        closeTime: null,
+        duration: "Open",
+        status: "OPEN",
+        notes: "Bot signal — 4/4 Wyckoff confirmations. RSI 69, EMA bearish, MACD negative, volume declining."
+    },
+    {
+        id: 3,
+        pair: "Multiple",
+        direction: "SHORT",
+        leverage: "High",
+        mode: "Cross",
+        entry: 0,
+        exit: 0,
+        size: 0,
+        sizeUnit: "",
+        pnl: -1070.86,
+        roi: -111.71,
+        tp: null,
+        sl: null,
+        openTime: "2026-02-25 09:00:00",
+        closeTime: "2026-02-25 20:00:00",
+        duration: "~11h",
+        status: "LIQUIDATED",
+        notes: "⚠️ Manual revenge shorts against +11% rally. Multiple liquidations. Account $694→$36. Lesson: NEVER trade manually against the trend."
+    },
     {
         id: 2,
         pair: "CYBER/USDT",
