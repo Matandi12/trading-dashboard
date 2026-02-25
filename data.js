@@ -31,6 +31,30 @@ const OPEN_POSITIONS = [
     }
 ];
 
+// ==================== DETAILED TRADE LOG ====================
+const DETAILED_TRADES = [
+    {
+        id: 1,
+        pair: "SOL/USDT",
+        direction: "LONG",
+        leverage: "60X",
+        mode: "Cross",
+        entry: 76.65,
+        exit: 77.83,
+        size: 319.58,
+        sizeUnit: "SOL",
+        pnl: 351.15,
+        roi: 86.00,
+        tp: null,
+        sl: null,
+        openTime: "2026-02-24 11:41:41",
+        closeTime: "2026-02-25 03:12:26",
+        duration: "15h 30m",
+        status: "TP HIT",
+        notes: "TP hit perfectly. Clean trade."
+    }
+];
+
 // Generate TRADES from DAILY_PNL
 const TRADES = [];
 Object.entries(DAILY_PNL).forEach(([monthKey, days]) => {

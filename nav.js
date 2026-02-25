@@ -6,6 +6,7 @@ function renderNav(activePage) {
         { id: 'calendar', href: 'calendar.html', icon: '📅', label: 'Calendar' },
         { id: 'stats', href: 'stats.html', icon: '📈', label: 'Stats' },
         { id: 'journal', href: 'journal.html', icon: '📓', label: 'Journal' },
+        { id: 'trades', href: 'trades.html', icon: '🔍', label: 'Trades' },
     ];
 
     // Desktop nav
